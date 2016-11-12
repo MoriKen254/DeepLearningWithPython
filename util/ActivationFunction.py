@@ -4,7 +4,6 @@
 
 class ActivationFunction:
 
-
     def __init__(self):
         self.func_name = 'ActivationFunction'
 

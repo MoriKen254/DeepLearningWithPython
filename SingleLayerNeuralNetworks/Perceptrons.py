@@ -4,17 +4,17 @@ import sys
 # sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../util')
 sys.path.append('../util')
 from ActivationFunction import Step
-
+import random
 
 class Perceptrons:
     u"""
     Class for Perceptrons
     """
 
-    def __init__(self, cnt_input_signal):
+    def __init__(self, dim_input_signal):
 
-        self.cnt_input_signal = cnt_input_signal
-        self.weights = list([cnt_input_signal])
+        self.dim_input_signal = dim_input_signal
+        self.weights = list([dim_input_signal])
 
 
     def train(self, input_signals, teacher_label, learning_rate):
@@ -51,14 +51,37 @@ class Perceptrons:
         for (weight, input_signal) in zip(self.weights, input_signals):
             pre_activation += weight * input_signal
 
-        return step(pre_activation)
+        activation_function = Step()
+        return activation_function.compute(a)
+
 
 if __name__ == '__main__':
+    CNT_TRAIN_DATA = 1000 # number of training data
+    CNT_TEST_DATA = 200 # number of test data
+    DIM_INPUT_SIGNAL = 2 # dimensions of input data
 
-    activation_function = Step()
-    a  = -1
+    # input data for training
+    train_input_data_set = [[0 for i in range(DIM_INPUT_SIGNAL)] for j in range(CNT_TRAIN_DATA)]
+    # output data (label) for training
+    train_teacher_labels = [0 for i in range(CNT_TRAIN_DATA)]
 
-    activation_function.compute(a)
+    # input data for test
+    test_input_data_set = [[0 for i in range(DIM_INPUT_SIGNAL)] for j in range(CNT_TRAIN_DATA)]
+    # label for inputs
+    test_teacher_labels = [0 for i in range(CNT_TRAIN_DATA)]
+    # output data predicted by the model
+    test_predict_teacher_labels = [0 for i in range(CNT_TRAIN_DATA)]
+
+    EPOCHS = 2000   # maximum training epochs
+    LEARNING_RATE = 1.0 # learning rate can be 1 in perceptrons
+
+    #
+    # Create training data and test data for demo.
+    #
+    # Let training data set for each class follow Normal (Gaussian) distribution here:
+    #   class 1 : x1 ~ N( -2.0, 1.0 ), y1 ~ N( +2.0, 1.0 )
+    #   class 2 : x2 ~ N( +2.0, 1.0 ), y2 ~ N( -2.0, 1.0 )
+    #
 
 
 
