@@ -3,7 +3,7 @@
 import random
 import math
 
-class GauusianDistribution:
+class GaussianDistribution:
 
     def __init__(self, mean, var, rand_obj):
         if (var < 0):
