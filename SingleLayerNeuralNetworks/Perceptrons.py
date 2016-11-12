@@ -15,7 +15,7 @@ class Perceptrons:
     def __init__(self, dim_input_signal):
 
         self.dim_input_signal = dim_input_signal
-        self.weights = [0 for i in range(dim_input_signal)]
+        self.weights = [0] * dim_input_signal
 
 
     def train(self, input_signals, teacher_label, learning_rate):
@@ -63,16 +63,16 @@ if __name__ == '__main__':
     DIM_INPUT_SIGNAL = 2 # dimensions of input data
 
     # input data for training
-    train_input_data_set = [[0 for i in range(0, DIM_INPUT_SIGNAL)] for j in range(0, CNT_TRAIN_DATA)]
+    train_input_data_set = [[0] * DIM_INPUT_SIGNAL for j in range(CNT_TRAIN_DATA)]
     # output data (label) for training
-    train_teacher_labels = [0 for i in range(0, CNT_TRAIN_DATA)]
+    train_teacher_labels = [0] * CNT_TRAIN_DATA
 
     # input data for test
-    test_input_data_set = [[0 for i in range(0, DIM_INPUT_SIGNAL)] for j in range(0, CNT_TEST_DATA)]
+    test_input_data_set = [[0] * DIM_INPUT_SIGNAL for j in range(0, CNT_TEST_DATA)]
     # label for inputs
-    test_teacher_labels = [0 for i in range(0, CNT_TEST_DATA)]
+    test_teacher_labels = [0] * CNT_TEST_DATA
     # output data predicted by the model
-    test_predict_output_labels = [0 for i in range(0, CNT_TEST_DATA)]
+    test_predict_output_labels = [0] * CNT_TEST_DATA
 
     EPOCHS = 10 #2000   # maximum training epochs
     LEARNING_RATE = 1.0 # learning rate can be 1 in perceptrons
