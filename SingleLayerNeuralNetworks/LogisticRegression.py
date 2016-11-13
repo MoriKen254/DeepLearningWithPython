@@ -37,20 +37,20 @@ class LogisticRegression:
 
         # train with SGD
         # 1. calculate gradient of gradients_w, gradients_b
-        for i, (input_signal, teacher_label, y_batch) in zip(enumerate(input_signals), teacher_labels, y_arr_batch):
-            predicted_y_arr = output(input_signal)
+        for n, (input_signal, teacher_label, y_batch) in enumerate(zip(input_signals, teacher_labels, y_arr_batch)):
+            predicted_y_arr = self.output(input_signal)
 
 
     def output(self, input_signals):
         pre_activations = [0] * self.dim_output_signal
 
-        for j, (weight, bias) in zip(enumerate(self.weights), self.biases):
-            for i, (w, input_signal) in zip(enumerate(self.weights), input_signals):
+        for j, (weight, bias) in enumerate(zip(self.weights, self.biases)):
+            for w, input_signal in zip(weight, input_signals):
                 pre_activations[j] += w * input_signal
 
             pre_activations[j] += bias
 
-        Sofmax.compute(pre_activations, self.dim_output_signal)
+        return Softmax.compute(pre_activations, self.dim_output_signal)
 
 
     def predict(self, input_signals):
@@ -160,8 +160,6 @@ if __name__ == '__main__':
             train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
             train_teacher_data_set_min_batch[i][j] = train_teacher_labels[idx]
 
-
-    a = 0
     #
     # Build Logistic Regression model
     #
@@ -176,9 +174,11 @@ if __name__ == '__main__':
 
         learning_rate *= 0.95
 
-    # # test
-    # for i, test_input_data in enumerate(test_input_data_set):
-    #     test_predict_output_labels[i] = classifier.predict(test_input_data)
+    # test
+    for i, test_input_data in enumerate(test_input_data_set):
+        test_predict_output_labels[i] = classifier.predict(test_input_data)
+
+    a = 0
 
     # #
     # # Evaluate the model

@@ -42,17 +42,18 @@ class Softmax:
         self.func_name = 'Softmax'
 
     @staticmethod
-    def compute(self, x_arr, dim_x):
-        y_arr = [0] * dim_x
-        max = 0.
-        sum = 0.
+    def compute(x_arr, dim_y):
+        y_arr = [0] * dim_y
+        max_val = 0.
+        sum_val = 0.
 
-        max = max(x_arr) # to prevent overflow
+        max_val = max(x_arr) # to prevent overflow
 
         for i, x in enumerate(x_arr):
-            y_arr[i] = math.exp(x - max)
+            y_arr[i] = math.exp(x - max_val)
+            sum_val += y_arr[i]
 
         for i, y in enumerate(y_arr):
-            y /= sum
+            y_arr[i] /= sum_val
 
         return y_arr
