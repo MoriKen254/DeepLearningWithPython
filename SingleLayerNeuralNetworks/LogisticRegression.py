@@ -98,7 +98,7 @@ if __name__ == '__main__':
     train_teacher_data_set_min_batch = [[[0] * DIM_OUTPUT_SIGNAL for j in range(MIN_BATCH_SIZE)]
                                       for k in range(CNT_MIN_BATCH)]
     min_batch_indexes = range(CNT_TRAIN_DATA)
-    random.shuffle(min_batch_indexes)
+    random.shuffle(min_batch_indexes)   # shuffle data index for SGD
 
     #
     # Create training data and test data for demo.
@@ -108,6 +108,13 @@ if __name__ == '__main__':
     #   class 2 : x2 ~ N( +2.0, 1.0 ), y2 ~ N( -2.0, 1.0 )
     #
 
+    #
+    # Training data for demo
+    #   class 1 : x1 ~ N( -2.0, 1.0 ), y1 ~ N( +2.0, 1.0 )
+    #   class 2 : x2 ~ N( +2.0, 1.0 ), y2 ~ N( -2.0, 1.0 )
+    #   class 3 : x3 ~ N(  0.0, 1.0 ), y3 ~ N(  0.0, 1.0 )
+    #
+
     rand_obj = random.Random()
     rand_obj.seed(1234)
 
@@ -115,26 +122,53 @@ if __name__ == '__main__':
     gaussian2 = GaussianDistribution(2.0, 1.0, rand_obj)
     gaussian3 = GaussianDistribution(0.0, 1.0, rand_obj)
 
-    # # data set in class 1
-    # for i in range(0, CNT_TRAIN_DATA/2):
-    #     train_input_data_set[i][0] = gaussian1.get_random()
-    #     train_input_data_set[i][1] = gaussian2.get_random()
-    #     train_teacher_labels[i] = 1
-    # for i in range(0, CNT_TEST_DATA/2):
-    #     test_input_data_set[i][0] = gaussian1.get_random()
-    #     test_input_data_set[i][1] = gaussian2.get_random()
-    #     test_teacher_labels[i] = 1
+    # data set in class 1
+    cls_idx_prev = 0
+    cls_idx_curr = 1
+    CNT_TRAIN_DATA_PER_CLS = CNT_TRAIN_DATA/CNT_PATTERN
+    CNT_TEST_DATA_PER_CLS = CNT_TEST_DATA/CNT_PATTERN
+    for i in range(CNT_TRAIN_DATA_PER_CLS*cls_idx_prev, CNT_TRAIN_DATA_PER_CLS*cls_idx_curr):
+        train_input_data_set[i][0] = gaussian1.get_random()
+        train_input_data_set[i][1] = gaussian2.get_random()
+        train_teacher_labels[i] = [1, 0, 0]
+    for i in range(CNT_TEST_DATA_PER_CLS*cls_idx_prev, CNT_TEST_DATA_PER_CLS*cls_idx_curr):
+        test_input_data_set[i][0] = gaussian1.get_random()
+        test_input_data_set[i][1] = gaussian2.get_random()
+        test_teacher_labels[i] = [1, 0, 0]
 
-    # # data set in class 2
-    # for i in range(CNT_TRAIN_DATA/2, CNT_TRAIN_DATA):
-    #     train_input_data_set[i][0] = gaussian2.get_random()
-    #     train_input_data_set[i][1] = gaussian1.get_random()
-    #     train_teacher_labels[i] = -1
-    # for i in range(CNT_TEST_DATA/2, CNT_TEST_DATA):
-    #     test_input_data_set[i][0] = gaussian2.get_random()
-    #     test_input_data_set[i][1] = gaussian1.get_random()
-    #     test_teacher_labels[i] = -1
+    # data set in class 2
+    cls_idx_prev += 1
+    cls_idx_curr += 1
+    for i in range(CNT_TRAIN_DATA_PER_CLS*cls_idx_prev, CNT_TRAIN_DATA_PER_CLS*cls_idx_curr):
+        train_input_data_set[i][0] = gaussian2.get_random()
+        train_input_data_set[i][1] = gaussian1.get_random()
+        train_teacher_labels[i] = [0, 1, 0]
+    for i in range(CNT_TEST_DATA_PER_CLS*cls_idx_prev, CNT_TEST_DATA_PER_CLS*cls_idx_curr):
+        test_input_data_set[i][0] = gaussian2.get_random()
+        test_input_data_set[i][1] = gaussian1.get_random()
+        test_teacher_labels[i] = [0, 1, 0]
 
+    # data set in class 3
+    cls_idx_prev += 1
+    cls_idx_curr += 1
+    for i in range(CNT_TRAIN_DATA_PER_CLS*cls_idx_prev, CNT_TRAIN_DATA_PER_CLS*cls_idx_curr):
+        train_input_data_set[i][0] = gaussian3.get_random()
+        train_input_data_set[i][1] = gaussian3.get_random()
+        train_teacher_labels[i] = [0, 0, 1]
+    for i in range(CNT_TEST_DATA_PER_CLS*cls_idx_prev, CNT_TEST_DATA_PER_CLS*cls_idx_curr):
+        test_input_data_set[i][0] = gaussian3.get_random()
+        test_input_data_set[i][1] = gaussian3.get_random()
+        test_teacher_labels[i] = [0, 0, 1]
+
+    # create minbatches with training data
+    for i in range(CNT_MIN_BATCH):
+        for j in range(MIN_BATCH_SIZE):
+            idx = min_batch_indexes[i * MIN_BATCH_SIZE + j]
+            train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
+            train_teacher_data_set_min_batch[i][j] = train_teacher_labels[idx]
+
+
+    a = 0
     # #
     # # build Perceptron model
     # #
