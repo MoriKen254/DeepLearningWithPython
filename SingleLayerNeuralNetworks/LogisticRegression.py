@@ -88,7 +88,7 @@ if __name__ == '__main__':
     test_predict_output_labels = [0] * CNT_TEST_DATA
 
     EPOCHS = 1000   # maximum training epochs
-    LEARNING_RATE = 0.2 # learning rate
+    learning_rate = 0.2 # learning rate
 
     MIN_BATCH_SIZE = 50 # number of data in each minbatch
     CNT_MIN_BATCH = CNT_TRAIN_DATA / MIN_BATCH_SIZE
@@ -103,13 +103,6 @@ if __name__ == '__main__':
     #
     # Create training data and test data for demo.
     #
-    # Let training data set for each class follow Normal (Gaussian) distribution here:
-    #   class 1 : x1 ~ N( -2.0, 1.0 ), y1 ~ N( +2.0, 1.0 )
-    #   class 2 : x2 ~ N( +2.0, 1.0 ), y2 ~ N( -2.0, 1.0 )
-    #
-
-    #
-    # Training data for demo
     #   class 1 : x1 ~ N( -2.0, 1.0 ), y1 ~ N( +2.0, 1.0 )
     #   class 2 : x2 ~ N( +2.0, 1.0 ), y2 ~ N( -2.0, 1.0 )
     #   class 3 : x3 ~ N(  0.0, 1.0 ), y3 ~ N(  0.0, 1.0 )
@@ -169,32 +162,19 @@ if __name__ == '__main__':
 
 
     a = 0
-    # #
-    # # build Perceptron model
-    # #
-    # epoch = 0   # training epochs
+    #
+    # Build Logistic Regression model
+    #
 
-    # # construct perceptrons
-    # classifier = Perceptrons(DIM_INPUT_SIGNAL)
+    # construct logistic regression
+    classifier = LogisticRegression(DIM_INPUT_SIGNAL, DIM_OUTPUT_SIGNAL)
 
-    # # train models
-    # classified_sum_prev = 0
-    # while True:
-    #     classified_sum = 0
+    for epoch in range(EPOCHS):   # training epochs
+        for (train_input_data_min_batch, train_teacher_data_min_batch) in \
+                zip(train_input_data_set_min_batch, train_teacher_data_set_min_batch):
+            classifier.train(train_input_data_set, train_teacher_data_min_batch, MIN_BATCH_SIZE, learning_rate)
 
-    #     for (train_input_data, train_teacher_label) in zip(train_input_data_set, train_teacher_labels):
-    #         classified_sum += classifier.train(train_input_data, train_teacher_label, LEARNING_RATE)
-
-    #     if classified_sum == CNT_TRAIN_DATA: # if all classes are correctly classified
-    #         break
-
-    #     if abs(classified_sum - classified_sum_prev) == 0: # if converged
-    #         break
-    #     classified_sum_prev = classified_sum
-
-    #     epoch += 1
-    #     if (epoch > EPOCHS): # if not converged after enough trials
-    #         break
+        learning_rate *= 0.95
 
     # # test
     # for i, test_input_data in enumerate(test_input_data_set):
