@@ -99,12 +99,11 @@ if __name__ == '__main__':
     gaussian2 = GaussianDistribution(2.0, 1.0, rand_obj)
 
     # data set in class 1
-    # intentionally insert invalid class to the index CNT_TRAIN_DATA/2
-    for i in range(0, CNT_TRAIN_DATA/2 - 1):
+    for i in range(0, CNT_TRAIN_DATA/2):
         train_input_data_set[i][0] = gaussian1.get_random()
         train_input_data_set[i][1] = gaussian2.get_random()
         train_teacher_labels[i] = 1
-    for i in range(0, CNT_TEST_DATA/2 - 1):
+    for i in range(0, CNT_TEST_DATA/2):
         test_input_data_set[i][0] = gaussian1.get_random()
         test_input_data_set[i][1] = gaussian2.get_random()
         test_teacher_labels[i] = 1
