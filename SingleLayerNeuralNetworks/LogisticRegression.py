@@ -37,23 +37,33 @@ class LogisticRegression:
 
         # train with SGD
         # 1. calculate gradient of gradients_w, gradients_b
+        ## loop for minibash size
         for n, (input_signal, teacher_label, y_err) in enumerate(zip(input_signals, teacher_labels, y_err_arr)):
             predicted_y_arr = self.output(input_signal)
 
-            for j, (predicted_y, t, gradient_w) in enumerate(zip(predicted_y_arr, teacher_label, gradients_w)):
+            ## loop for output size
+            for j, (predicted_y, teacher_elem, gradient_w) in enumerate(zip(predicted_y_arr, teacher_label, gradients_w)):
                 # t_n - y_n : error between output and teacher
-                y_err[j] = predicted_y - t
+                y_err[j] = predicted_y - teacher_elem
 
-                for i, input_s in enumerate(input_signal):
-                    # dE/dw = - sigma{ (t_n - y_n) * x_n }
-                    gradient_w[i] += y_err[j] * input_s
+                ## loop for input size
+                for i, input_elem in enumerate(input_signal):
+                    # dE/dw = - Sum{ (t_n - y_n) * x_n } ... (2.5.14)
+                    gradient_w[i] += y_err[j] * input_elem
 
-                # dE/db = - sigma{ t_n - y_n }
+                # dE/db = - Sum{ t_n - y_n } ... (2.5.15)
                 gradients_b[j] += y_err[j]
 
-        a = 0
         # 2. update param
+        for j, (gradient_w, gradient_b) in  enumerate(zip(gradients_w, gradients_b)):
+            for i, gradient_w_elem in  enumerate(gradient_w):
+                # w_(k+1) = w_(k) - eta * dE/dw = w_(k) - eta * Sum{ (t_n - y_n) * x_n } / min_batch_size ... (2.5.26)
+                self.weights[j][i] -= learning_rate * gradient_w_elem / min_batch_size
 
+            # b_(k+1) = b_(k) - eta * dE/db = b_(k) - eta * Sum{ (t_n - y_n) } / min_batch_size ... (2.5.27)
+            self.biases[j] -= learning_rate * gradient_b / min_batch_size
+
+        return y_err_arr
 
 
     def output(self, input_signals):
@@ -102,7 +112,7 @@ if __name__ == '__main__':
     # output data predicted by the model
     test_predict_output_labels = [0] * CNT_TEST_DATA
 
-    EPOCHS = 1000   # maximum training epochs
+    EPOCHS = 5   # maximum training epochs
     learning_rate = 0.2 # learning rate
 
     MIN_BATCH_SIZE = 50 # number of data in each minbatch
@@ -186,6 +196,8 @@ if __name__ == '__main__':
         for (train_input_data_min_batch, train_teacher_data_min_batch) in \
                 zip(train_input_data_set_min_batch, train_teacher_data_set_min_batch):
             classifier.train(train_input_data_set, train_teacher_data_min_batch, MIN_BATCH_SIZE, learning_rate)
+
+        print 'epoch = %.lf' % epoch
 
         learning_rate *= 0.95
 
