@@ -120,7 +120,7 @@ if __name__ == '__main__':
     # output data predicted by the model
     test_predict_output_labels = [0] * CNT_TEST_DATA
 
-    EPOCHS = 5   # maximum training epochs
+    EPOCHS = 1000   # maximum training epochs
     learning_rate = 0.2 # learning rate
 
     MIN_BATCH_SIZE = 50 # number of data in each minbatch
@@ -213,43 +213,52 @@ if __name__ == '__main__':
     for i, test_input_data in enumerate(test_input_data_set):
         test_predict_output_labels[i] = classifier.predict(test_input_data)
 
-    a = 0
+    #
+    # Evaluate the model
+    #
+    confusion_matrix = [[0] * CNT_PATTERN for j in range(CNT_PATTERN)]
+    accuracy = 0.
+    precision = [0] * CNT_PATTERN
+    recall = [0] * CNT_PATTERN
 
-    # #
-    # # Evaluate the model
-    # #
-    # confusion_matrix = [[0] * 2 for j in range(0, 2)]
-    # accuracy = 0.
-    # precision = 0.
-    # recall = 0.
+    for test_predict_output_label, test_teacher_labels in zip(test_predict_output_labels, test_teacher_labels):
+        predicted_idx = test_predict_output_label.index(1)
+        actual_idx = test_teacher_labels.index(1)
 
-    # for (test_predict_output_label, test_teacher_label) in zip(test_predict_output_labels, test_teacher_labels):
-    #     if test_predict_output_label > 0:
-    #         if(test_teacher_label > 0):
-    #             accuracy += 1
-    #             precision += 1
-    #             recall += 1
-    #             confusion_matrix[0][0] += 1
-    #         else:
-    #             confusion_matrix[1][0] += 1
-    #     else:
-    #         if(test_teacher_label > 0):
-    #             confusion_matrix[0][1] += 1
-    #         else:
-    #             accuracy += 1
-    #             confusion_matrix[1][1] += 1
+        confusion_matrix[actual_idx][predicted_idx] += 1
 
-    # accuracy /= CNT_TEST_DATA
+    for i in range(CNT_PATTERN):
+        col = 0
+        row = 0
+
+        for j in range(CNT_PATTERN):
+            if i == j:
+                accuracy += confusion_matrix[i][j]
+                precision[i] += confusion_matrix[j][i]
+                recall[i] += confusion_matrix[i][j]
+
+            col += confusion_matrix[j][i]
+            row += confusion_matrix[i][j]
+
+        precision[i] /= col
+        recall[i] /= row
+
+    accuracy /= CNT_TEST_DATA
+
     # if confusion_matrix[0][0] + confusion_matrix[1][0] != 0:
     #     precision /= confusion_matrix[0][0] + confusion_matrix[1][0]
     # if confusion_matrix[0][0] + confusion_matrix[0][1] != 0:
     #     recall /= confusion_matrix[0][0] + confusion_matrix[0][1]
 
-    # print '----------------------------'
-    # print 'Perceptrons model evaluation'
-    # print '----------------------------'
-    # print 'Accuracy:  %.1f %%' % (accuracy * 100)
-    # print 'Precision: %.1f %%' % (precision * 100)
-    # print 'Recall:    %.1f %%' % (recall * 100)
+    print '------------------------------------'
+    print 'Logistic Regression model evaluation'
+    print '------------------------------------'
+    print 'Accuracy:  %.1f %%' % (accuracy * 100)
+    print 'Precision:'
+    for i, precision_elem in enumerate(precision):
+        print 'class %d: %.1f %%' % (i+1, precision_elem * 100)
+    print 'Recall:'
+    for i, recall_elem in enumerate(recall):
+        print 'class %d: %.1f %%' % (i+1, recall_elem * 100)
 
-    # a = 0
+    a = 0
