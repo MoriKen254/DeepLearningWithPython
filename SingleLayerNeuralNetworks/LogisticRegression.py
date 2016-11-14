@@ -33,12 +33,27 @@ class LogisticRegression:
         gradients_w = [[0] * self.dim_input_signal for i in range(self.dim_output_signal)]
         gradients_b = [0] * self.dim_output_signal
 
-        y_arr_batch = [[0] * self.dim_output_signal for i in range(min_batch_size)]
+        y_err_arr = [[0] * self.dim_output_signal for i in range(min_batch_size)]
 
         # train with SGD
         # 1. calculate gradient of gradients_w, gradients_b
-        for n, (input_signal, teacher_label, y_batch) in enumerate(zip(input_signals, teacher_labels, y_arr_batch)):
+        for n, (input_signal, teacher_label, y_err) in enumerate(zip(input_signals, teacher_labels, y_err_arr)):
             predicted_y_arr = self.output(input_signal)
+
+            for j, (predicted_y, t, gradient_w) in enumerate(zip(predicted_y_arr, teacher_label, gradients_w)):
+                # t_n - y_n : error between output and teacher
+                y_err[j] = predicted_y - t
+
+                for i, input_s in enumerate(input_signal):
+                    # dE/dw = - sigma{ (t_n - y_n) * x_n }
+                    gradient_w[i] += y_err[j] * input_s
+
+                # dE/db = - sigma{ t_n - y_n }
+                gradients_b[j] += y_err[j]
+
+        a = 0
+        # 2. update param
+
 
 
     def output(self, input_signals):
