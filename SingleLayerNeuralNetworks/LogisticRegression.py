@@ -66,6 +66,7 @@ class LogisticRegression:
         return y_err_arr
 
 
+    # compute output layer with softmax
     def output(self, input_signals):
         pre_activations = [0] * self.dim_output_signal
 
@@ -80,17 +81,24 @@ class LogisticRegression:
 
     def predict(self, input_signals):
 
-        pre_activation = 0.0
+        output_vals = self.output(input_signals) # activate input data through learned networks
+        labels = [0] * len(output_vals) # output_vals is the probability, so cast it to label
 
-        # check array size
-        if len(input_signals) is not len(self.weights):
-            return
+        argmax = -1
+        max_val = 0.
 
-        for (weight, input_signal) in zip(self.weights, input_signals):
-            pre_activation += weight * input_signal
+        for i, output_elem in enumerate(output_vals):
+            if max_val < output_elem:
+                max_val = output_elem
+                argmax = i
 
-        activation_function = Step()
-        return activation_function.compute(pre_activation)
+        for i in range(len(labels)):
+            if i == argmax:
+                labels[i] = 1 # set 1 only to the maximum label
+            else:
+                labels[i] = 0 # otherwise 0
+
+        return labels
 
 
 if __name__ == '__main__':
