@@ -155,119 +155,124 @@ if __name__ == '__main__':
     CNT_TRAIN_DATA_PER_CLS = CNT_TRAIN_DATA/CNT_PATTERN
     CNT_TEST_DATA_PER_CLS = CNT_TEST_DATA/CNT_PATTERN
 
-    print 'Read random data set from csv file.'
-    # data set in class 1
-    f = open('../data/LogisticRegression/train1.csv', 'r')
-    reader = csv.reader(f)
-    for i, row in enumerate(reader):
-        index = i + CNT_TRAIN_DATA_PER_CLS*cls_idx_prev
-        train_input_data_set[index][0] = float(row[0])
-        train_input_data_set[index][1] = float(row[1])
-        train_teacher_labels[index] = [int(row[2]), int(row[3]), int(row[4])]
-    f.close()
+    use_csv = False
+    # get argument
+    if sys.argv[1] == 'use_csv':
+        use_csv = True
 
-    f = open('../data/LogisticRegression/test1.csv', 'r')
-    reader = csv.reader(f)
-    for i, row in enumerate(reader):
-        index = i + CNT_TEST_DATA_PER_CLS*cls_idx_prev
-        test_input_data_set[index][0] = float(row[0])
-        test_input_data_set[index][1] = float(row[1])
-        test_teacher_labels[index] = [int(row[2]), int(row[3]), int(row[4])]
-    f.close()
+    if use_csv:
+        print 'Read random data set from csv file.'
+        # data set in class 1
+        f = open('../data/LogisticRegression/train1.csv', 'r')
+        reader = csv.reader(f)
+        for i, row in enumerate(reader):
+            index = i + CNT_TRAIN_DATA_PER_CLS*cls_idx_prev
+            train_input_data_set[index][0] = float(row[0])
+            train_input_data_set[index][1] = float(row[1])
+            train_teacher_labels[index] = [int(row[2]), int(row[3]), int(row[4])]
+        f.close()
 
-    # data set in class 2
-    cls_idx_prev+=1
-    f = open('../data/LogisticRegression/train2.csv', 'r')
-    reader = csv.reader(f)
-    for i, row in enumerate(reader):
-        index = i + CNT_TRAIN_DATA_PER_CLS*cls_idx_prev
-        train_input_data_set[index][0] = float(row[0])
-        train_input_data_set[index][1] = float(row[1])
-        train_teacher_labels[index] = [int(row[2]), int(row[3]), int(row[4])]
-    f.close()
+        f = open('../data/LogisticRegression/test1.csv', 'r')
+        reader = csv.reader(f)
+        for i, row in enumerate(reader):
+            index = i + CNT_TEST_DATA_PER_CLS*cls_idx_prev
+            test_input_data_set[index][0] = float(row[0])
+            test_input_data_set[index][1] = float(row[1])
+            test_teacher_labels[index] = [int(row[2]), int(row[3]), int(row[4])]
+        f.close()
 
-    f = open('../data/LogisticRegression/test2.csv', 'r')
-    reader = csv.reader(f)
-    for i, row in enumerate(reader):
-        index = i + CNT_TEST_DATA_PER_CLS*cls_idx_prev
-        test_input_data_set[index][0] = float(row[0])
-        test_input_data_set[index][1] = float(row[1])
-        test_teacher_labels[index] = [int(row[2]), int(row[3]), int(row[4])]
-    f.close()
+        # data set in class 2
+        cls_idx_prev+=1
+        f = open('../data/LogisticRegression/train2.csv', 'r')
+        reader = csv.reader(f)
+        for i, row in enumerate(reader):
+            index = i + CNT_TRAIN_DATA_PER_CLS*cls_idx_prev
+            train_input_data_set[index][0] = float(row[0])
+            train_input_data_set[index][1] = float(row[1])
+            train_teacher_labels[index] = [int(row[2]), int(row[3]), int(row[4])]
+        f.close()
 
-    # data set in class 3
-    cls_idx_prev+=1
-    f = open('../data/LogisticRegression/train3.csv', 'r')
-    reader = csv.reader(f)
-    for i, row in enumerate(reader):
-        index = i + CNT_TRAIN_DATA_PER_CLS*cls_idx_prev
-        train_input_data_set[index][0] = float(row[0])
-        train_input_data_set[index][1] = float(row[1])
-        train_teacher_labels[index] = [int(row[2]), int(row[3]), int(row[4])]
-    f.close()
+        f = open('../data/LogisticRegression/test2.csv', 'r')
+        reader = csv.reader(f)
+        for i, row in enumerate(reader):
+            index = i + CNT_TEST_DATA_PER_CLS*cls_idx_prev
+            test_input_data_set[index][0] = float(row[0])
+            test_input_data_set[index][1] = float(row[1])
+            test_teacher_labels[index] = [int(row[2]), int(row[3]), int(row[4])]
+        f.close()
 
-    f = open('../data/LogisticRegression/test3.csv', 'r')
-    reader = csv.reader(f)
-    for i, row in enumerate(reader):
-        index = i + CNT_TEST_DATA_PER_CLS*cls_idx_prev
-        test_input_data_set[index][0] = float(row[0])
-        test_input_data_set[index][1] = float(row[1])
-        test_teacher_labels[index] = [int(row[2]), int(row[3]), int(row[4])]
-    f.close()
+        # data set in class 3
+        cls_idx_prev+=1
+        f = open('../data/LogisticRegression/train3.csv', 'r')
+        reader = csv.reader(f)
+        for i, row in enumerate(reader):
+            index = i + CNT_TRAIN_DATA_PER_CLS*cls_idx_prev
+            train_input_data_set[index][0] = float(row[0])
+            train_input_data_set[index][1] = float(row[1])
+            train_teacher_labels[index] = [int(row[2]), int(row[3]), int(row[4])]
+        f.close()
 
-    # create minbatches with training data
-    f = open('../data/LogisticRegression/random_index.csv', 'r')
-    reader = csv.reader(f)
-    for i in range(CNT_MIN_BATCH):
-        for j in range(MIN_BATCH_SIZE):
-            #idx = min_batch_indexes[i * MIN_BATCH_SIZE + j]
-            idx = int(float(reader.next()[0]))
-            train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
-            train_teacher_data_set_min_batch[i][j] = train_teacher_labels[idx]
-    f.close()
+        f = open('../data/LogisticRegression/test3.csv', 'r')
+        reader = csv.reader(f)
+        for i, row in enumerate(reader):
+            index = i + CNT_TEST_DATA_PER_CLS*cls_idx_prev
+            test_input_data_set[index][0] = float(row[0])
+            test_input_data_set[index][1] = float(row[1])
+            test_teacher_labels[index] = [int(row[2]), int(row[3]), int(row[4])]
+        f.close()
 
-    u"""
-    print 'Create data set randomly.'
-    for i in range(CNT_TRAIN_DATA_PER_CLS*cls_idx_prev, CNT_TRAIN_DATA_PER_CLS*cls_idx_curr):
-        train_input_data_set[i][0] = gaussian1.get_random()
-        train_input_data_set[i][1] = gaussian2.get_random()
-        train_teacher_labels[i] = [1, 0, 0]
-    for i in range(CNT_TEST_DATA_PER_CLS*cls_idx_prev, CNT_TEST_DATA_PER_CLS*cls_idx_curr):
-        test_input_data_set[i][0] = gaussian1.get_random()
-        test_input_data_set[i][1] = gaussian2.get_random()
-        test_teacher_labels[i] = [1, 0, 0]
+        # create minbatches with training data
+        f = open('../data/LogisticRegression/random_index.csv', 'r')
+        reader = csv.reader(f)
+        for i in range(CNT_MIN_BATCH):
+            for j in range(MIN_BATCH_SIZE):
+                #idx = min_batch_indexes[i * MIN_BATCH_SIZE + j]
+                idx = int(float(reader.next()[0]))
+                train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
+                train_teacher_data_set_min_batch[i][j] = train_teacher_labels[idx]
+        f.close()
 
-    # data set in class 2
-    cls_idx_prev += 1
-    cls_idx_curr += 1
-    for i in range(CNT_TRAIN_DATA_PER_CLS*cls_idx_prev, CNT_TRAIN_DATA_PER_CLS*cls_idx_curr):
-        train_input_data_set[i][0] = gaussian2.get_random()
-        train_input_data_set[i][1] = gaussian1.get_random()
-        train_teacher_labels[i] = [0, 1, 0]
-    for i in range(CNT_TEST_DATA_PER_CLS*cls_idx_prev, CNT_TEST_DATA_PER_CLS*cls_idx_curr):
-        test_input_data_set[i][0] = gaussian2.get_random()
-        test_input_data_set[i][1] = gaussian1.get_random()
-        test_teacher_labels[i] = [0, 1, 0]
+    else:
+        print 'Create data set randomly.'
+        for i in range(CNT_TRAIN_DATA_PER_CLS*cls_idx_prev, CNT_TRAIN_DATA_PER_CLS*cls_idx_curr):
+            train_input_data_set[i][0] = gaussian1.get_random()
+            train_input_data_set[i][1] = gaussian2.get_random()
+            train_teacher_labels[i] = [1, 0, 0]
+        for i in range(CNT_TEST_DATA_PER_CLS*cls_idx_prev, CNT_TEST_DATA_PER_CLS*cls_idx_curr):
+            test_input_data_set[i][0] = gaussian1.get_random()
+            test_input_data_set[i][1] = gaussian2.get_random()
+            test_teacher_labels[i] = [1, 0, 0]
 
-    # data set in class 3
-    cls_idx_prev += 1
-    cls_idx_curr += 1
-    for i in range(CNT_TRAIN_DATA_PER_CLS*cls_idx_prev, CNT_TRAIN_DATA_PER_CLS*cls_idx_curr):
-        train_input_data_set[i][0] = gaussian3.get_random()
-        train_input_data_set[i][1] = gaussian3.get_random()
-        train_teacher_labels[i] = [0, 0, 1]
-    for i in range(CNT_TEST_DATA_PER_CLS*cls_idx_prev, CNT_TEST_DATA_PER_CLS*cls_idx_curr):
-        test_input_data_set[i][0] = gaussian3.get_random()
-        test_input_data_set[i][1] = gaussian3.get_random()
-        test_teacher_labels[i] = [0, 0, 1]
+        # data set in class 2
+        cls_idx_prev += 1
+        cls_idx_curr += 1
+        for i in range(CNT_TRAIN_DATA_PER_CLS*cls_idx_prev, CNT_TRAIN_DATA_PER_CLS*cls_idx_curr):
+            train_input_data_set[i][0] = gaussian2.get_random()
+            train_input_data_set[i][1] = gaussian1.get_random()
+            train_teacher_labels[i] = [0, 1, 0]
+        for i in range(CNT_TEST_DATA_PER_CLS*cls_idx_prev, CNT_TEST_DATA_PER_CLS*cls_idx_curr):
+            test_input_data_set[i][0] = gaussian2.get_random()
+            test_input_data_set[i][1] = gaussian1.get_random()
+            test_teacher_labels[i] = [0, 1, 0]
 
-    # create minbatches with training data
-    for i in range(CNT_MIN_BATCH):
-        for j in range(MIN_BATCH_SIZE):
-            idx = min_batch_indexes[i * MIN_BATCH_SIZE + j]
-            train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
-            train_teacher_data_set_min_batch[i][j] = train_teacher_labels[idx]
-    """
+        # data set in class 3
+        cls_idx_prev += 1
+        cls_idx_curr += 1
+        for i in range(CNT_TRAIN_DATA_PER_CLS*cls_idx_prev, CNT_TRAIN_DATA_PER_CLS*cls_idx_curr):
+            train_input_data_set[i][0] = gaussian3.get_random()
+            train_input_data_set[i][1] = gaussian3.get_random()
+            train_teacher_labels[i] = [0, 0, 1]
+        for i in range(CNT_TEST_DATA_PER_CLS*cls_idx_prev, CNT_TEST_DATA_PER_CLS*cls_idx_curr):
+            test_input_data_set[i][0] = gaussian3.get_random()
+            test_input_data_set[i][1] = gaussian3.get_random()
+            test_teacher_labels[i] = [0, 0, 1]
+
+        # create minbatches with training data
+        for i in range(CNT_MIN_BATCH):
+            for j in range(MIN_BATCH_SIZE):
+                idx = min_batch_indexes[i * MIN_BATCH_SIZE + j]
+                train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
+                train_teacher_data_set_min_batch[i][j] = train_teacher_labels[idx]
 
     #
     # Build Logistic Regression model
