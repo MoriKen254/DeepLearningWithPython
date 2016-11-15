@@ -70,11 +70,12 @@ class LogisticRegression:
     def output(self, input_signals):
         pre_activations = [0] * self.dim_output_signal
 
+        # E = Sum{ w^T * x + b }
         for j, (weight, bias) in enumerate(zip(self.weights, self.biases)):
             for w, input_signal in zip(weight, input_signals):
                 pre_activations[j] += w * input_signal
 
-            pre_activations[j] += bias
+            pre_activations[j] += bias # linear output
 
         return Softmax.compute(pre_activations, self.dim_output_signal)
 
@@ -193,6 +194,8 @@ if __name__ == '__main__':
             train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
             train_teacher_data_set_min_batch[i][j] = train_teacher_labels[idx]
 
+
+
     #
     # Build Logistic Regression model
     #
@@ -200,6 +203,7 @@ if __name__ == '__main__':
     # construct logistic regression
     classifier = LogisticRegression(DIM_INPUT_SIGNAL, DIM_OUTPUT_SIGNAL)
 
+    # train
     for epoch in range(EPOCHS):   # training epochs
         for (train_input_data_min_batch, train_teacher_data_min_batch) in \
                 zip(train_input_data_set_min_batch, train_teacher_data_set_min_batch):
