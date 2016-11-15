@@ -12,8 +12,6 @@ import sys
 import random
 
 sys.path.append('../util')
-from ActivationFunction import Softmax
-from GaussianDistribution import GaussianDistribution
 
 class MutliLayerPerceptrons:
     u"""
