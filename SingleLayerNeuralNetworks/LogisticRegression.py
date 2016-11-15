@@ -7,6 +7,7 @@ This software is released under the MIT License.
 See LICENSE file included in this repository.
 """
 
+import csv
 import sys
 import random
 
@@ -38,21 +39,21 @@ class LogisticRegression:
         # train with SGD
         # 1. calculate gradient of gradients_w, gradients_b
         ## loop for minibash size
-        for n, (input_signal, teacher_label, y_err) in enumerate(zip(input_signals, teacher_labels, y_err_arr)):
+        for n, (input_signal, teacher_label) in enumerate(zip(input_signals, teacher_labels)):
             predicted_y_arr = self.output(input_signal)
 
             ## loop for output size
-            for j, (predicted_y, teacher_elem, gradient_w) in enumerate(zip(predicted_y_arr, teacher_label, gradients_w)):
+            for j, (predicted_y, teacher_elem) in enumerate(zip(predicted_y_arr, teacher_label)):
                 # t_n - y_n : error between output and teacher
-                y_err[j] = predicted_y - teacher_elem
+                y_err_arr[n][j] = predicted_y - teacher_elem
 
                 ## loop for input size
                 for i, input_elem in enumerate(input_signal):
                     # dE/dw = - Sum{ (t_n - y_n) * x_n } ... (2.5.14)
-                    gradient_w[i] += y_err[j] * input_elem
+                    gradients_w[j][i] += y_err_arr[n][j] * input_elem
 
                 # dE/db = - Sum{ t_n - y_n } ... (2.5.15)
-                gradients_b[j] += y_err[j]
+                gradients_b[j] += y_err_arr[n][j]
 
         # 2. update param
         for j, (gradient_w, gradient_b) in  enumerate(zip(gradients_w, gradients_b)):
@@ -121,7 +122,7 @@ if __name__ == '__main__':
     # output data predicted by the model
     test_predict_output_labels = [0] * CNT_TEST_DATA
 
-    EPOCHS = 1000   # maximum training epochs
+    EPOCHS = 100   # maximum training epochs
     learning_rate = 0.2 # learning rate
 
     MIN_BATCH_SIZE = 50 # number of data in each minbatch
@@ -149,11 +150,84 @@ if __name__ == '__main__':
     gaussian2 = GaussianDistribution(2.0, 1.0, rand_obj)
     gaussian3 = GaussianDistribution(0.0, 1.0, rand_obj)
 
-    # data set in class 1
     cls_idx_prev = 0
     cls_idx_curr = 1
     CNT_TRAIN_DATA_PER_CLS = CNT_TRAIN_DATA/CNT_PATTERN
     CNT_TEST_DATA_PER_CLS = CNT_TEST_DATA/CNT_PATTERN
+
+    print 'Read random data set from csv file.'
+    # data set in class 1
+    f = open('../data/LogisticRegression/train1.csv', 'r')
+    reader = csv.reader(f)
+    for i, row in enumerate(reader):
+        index = i + CNT_TRAIN_DATA_PER_CLS*cls_idx_prev
+        train_input_data_set[index][0] = float(row[0])
+        train_input_data_set[index][1] = float(row[1])
+        train_teacher_labels[index] = [int(row[2]), int(row[3]), int(row[4])]
+    f.close()
+
+    f = open('../data/LogisticRegression/test1.csv', 'r')
+    reader = csv.reader(f)
+    for i, row in enumerate(reader):
+        index = i + CNT_TEST_DATA_PER_CLS*cls_idx_prev
+        test_input_data_set[index][0] = float(row[0])
+        test_input_data_set[index][1] = float(row[1])
+        test_teacher_labels[index] = [int(row[2]), int(row[3]), int(row[4])]
+    f.close()
+
+    # data set in class 2
+    cls_idx_prev+=1
+    f = open('../data/LogisticRegression/train2.csv', 'r')
+    reader = csv.reader(f)
+    for i, row in enumerate(reader):
+        index = i + CNT_TRAIN_DATA_PER_CLS*cls_idx_prev
+        train_input_data_set[index][0] = float(row[0])
+        train_input_data_set[index][1] = float(row[1])
+        train_teacher_labels[index] = [int(row[2]), int(row[3]), int(row[4])]
+    f.close()
+
+    f = open('../data/LogisticRegression/test2.csv', 'r')
+    reader = csv.reader(f)
+    for i, row in enumerate(reader):
+        index = i + CNT_TEST_DATA_PER_CLS*cls_idx_prev
+        test_input_data_set[index][0] = float(row[0])
+        test_input_data_set[index][1] = float(row[1])
+        test_teacher_labels[index] = [int(row[2]), int(row[3]), int(row[4])]
+    f.close()
+
+    # data set in class 3
+    cls_idx_prev+=1
+    f = open('../data/LogisticRegression/train3.csv', 'r')
+    reader = csv.reader(f)
+    for i, row in enumerate(reader):
+        index = i + CNT_TRAIN_DATA_PER_CLS*cls_idx_prev
+        train_input_data_set[index][0] = float(row[0])
+        train_input_data_set[index][1] = float(row[1])
+        train_teacher_labels[index] = [int(row[2]), int(row[3]), int(row[4])]
+    f.close()
+
+    f = open('../data/LogisticRegression/test3.csv', 'r')
+    reader = csv.reader(f)
+    for i, row in enumerate(reader):
+        index = i + CNT_TEST_DATA_PER_CLS*cls_idx_prev
+        test_input_data_set[index][0] = float(row[0])
+        test_input_data_set[index][1] = float(row[1])
+        test_teacher_labels[index] = [int(row[2]), int(row[3]), int(row[4])]
+    f.close()
+
+    # create minbatches with training data
+    f = open('../data/LogisticRegression/random_index.csv', 'r')
+    reader = csv.reader(f)
+    for i in range(CNT_MIN_BATCH):
+        for j in range(MIN_BATCH_SIZE):
+            #idx = min_batch_indexes[i * MIN_BATCH_SIZE + j]
+            idx = int(float(reader.next()[0]))
+            train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
+            train_teacher_data_set_min_batch[i][j] = train_teacher_labels[idx]
+    f.close()
+
+    u"""
+    print 'Create data set randomly.'
     for i in range(CNT_TRAIN_DATA_PER_CLS*cls_idx_prev, CNT_TRAIN_DATA_PER_CLS*cls_idx_curr):
         train_input_data_set[i][0] = gaussian1.get_random()
         train_input_data_set[i][1] = gaussian2.get_random()
@@ -193,8 +267,7 @@ if __name__ == '__main__':
             idx = min_batch_indexes[i * MIN_BATCH_SIZE + j]
             train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
             train_teacher_data_set_min_batch[i][j] = train_teacher_labels[idx]
-
-
+    """
 
     #
     # Build Logistic Regression model
@@ -207,9 +280,10 @@ if __name__ == '__main__':
     for epoch in range(EPOCHS):   # training epochs
         for (train_input_data_min_batch, train_teacher_data_min_batch) in \
                 zip(train_input_data_set_min_batch, train_teacher_data_set_min_batch):
-            classifier.train(train_input_data_set, train_teacher_data_min_batch, MIN_BATCH_SIZE, learning_rate)
+            classifier.train(train_input_data_min_batch, train_teacher_data_min_batch, MIN_BATCH_SIZE, learning_rate)
 
-        print 'epoch = %.lf' % epoch
+        if epoch%10 == 0:
+            print 'epoch = %.lf' % epoch
 
         learning_rate *= 0.95
 
@@ -232,8 +306,8 @@ if __name__ == '__main__':
         confusion_matrix[actual_idx][predicted_idx] += 1
 
     for i in range(CNT_PATTERN):
-        col = 0
-        row = 0
+        col = 0.
+        row = 0.
 
         for j in range(CNT_PATTERN):
             if i == j:
