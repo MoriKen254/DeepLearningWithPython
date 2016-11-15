@@ -32,6 +32,9 @@ class MutliLayerPerceptrons:
 
         self.rand_obj = rand_obj
 
+        # construct hidden layer with tanh as activation function
+        hidden_layer = 0
+
 if __name__ == '__main__':
     CNT_PATTERN = 2
     CNT_TRAIN_DATA = 4 # number of training data
