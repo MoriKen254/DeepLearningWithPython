@@ -344,4 +344,3 @@ if __name__ == '__main__':
     for i, recall_elem in enumerate(recall):
         print 'class %d: %.1f %%' % (i+1, recall_elem * 100)
 
-    a = 0
