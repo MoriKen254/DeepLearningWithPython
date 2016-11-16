@@ -11,7 +11,7 @@ import csv
 import sys
 import random
 
-sys.path.append('../util')
+from HiddenLayer import HiddenLayer
 
 class MutliLayerPerceptrons:
     u"""
@@ -33,7 +33,7 @@ class MutliLayerPerceptrons:
         self.rand_obj = rand_obj
 
         # construct hidden layer with tanh as activation function
-        hidden_layer = 0
+        hidden_layer = HiddenLayer(dim_input_signal, dim_output_signal, None, None, rand_obj, "tanh")
 
 if __name__ == '__main__':
     CNT_PATTERN = 2

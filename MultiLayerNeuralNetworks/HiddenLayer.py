@@ -8,6 +8,10 @@ See LICENSE file included in this repository.
 """
 
 import random
+import sys
+
+sys.path.append('../util')
+from RandomGenerator import Uniform
 
 class HiddenLayer:
 
@@ -30,4 +34,7 @@ class HiddenLayer:
 
             for j in range(dim_output_signal):
                 for i in range(dim_input_signal):
-                    weights[j][i] = 0
+                    random_generator = Uniform(-w, w)
+                    weights[j][i] = random_generator.compute(rand_obj)
+
+
