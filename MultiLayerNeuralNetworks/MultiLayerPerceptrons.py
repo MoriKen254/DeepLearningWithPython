@@ -13,6 +13,9 @@ import random
 
 from HiddenLayer import HiddenLayer
 
+sys.path.append('../SingleLayerNeuralNetworks')
+from LogisticRegression import LogisticRegression
+
 class MutliLayerPerceptrons:
     u"""
     Class for MutliLayerPerceptrons
@@ -34,6 +37,9 @@ class MutliLayerPerceptrons:
 
         # construct hidden layer with tanh as activation function
         hidden_layer = HiddenLayer(dim_input_signal, dim_output_signal, None, None, rand_obj, "Tanh")
+
+        # construct output layer i.e. multi-class logistic layer
+        logisticLayer = LogisticRegression(dim_hidden, dim_output_signal)
 
 if __name__ == '__main__':
     CNT_PATTERN = 2
