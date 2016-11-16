@@ -30,10 +30,10 @@ class Step(ActivationFunction):
         super(Step, self).__init__('Step')
 
     def compute(self, x):
-        if x >= 0:
-            return 1
+        if x >= 0.:
+            return 1.
         else:
-            return -1
+            return -1.
 
     def differentiate(self, x):
         return 0
@@ -62,6 +62,24 @@ class Tanh(ActivationFunction):
 
     def differentiate(self, x):
         return 1. - x*x
+
+
+class ReLU(ActivationFunction):
+
+    def __init__(self):
+        super(ReLU, self).__init__('ReLU')
+
+    def compute(self, x):
+        if x > 0:
+            return x
+        else:
+            return 0.
+
+    def differentiate(self, x):
+        if x > 0:
+            return 1
+        else:
+            return 0.
 
 
 class Softmax:

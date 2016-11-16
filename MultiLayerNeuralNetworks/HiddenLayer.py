@@ -12,7 +12,7 @@ import sys
 
 sys.path.append('../util')
 from RandomGenerator import Uniform
-from ActivationFunction import Softmax, Step
+from ActivationFunction import Sigmoid, Tanh, ReLU
 
 class HiddenLayer:
 
@@ -24,7 +24,7 @@ class HiddenLayer:
         self.biases = [0] * dim_output_signal
 
         if weights is None:
-            self.weights = [[0] * dim_input_signal for i in range(dim_output_signal)]
+            weights = [[0] * dim_input_signal for i in range(dim_output_signal)]
             w = 1./dim_input_signal
 
             for j in range(dim_output_signal):
@@ -41,5 +41,13 @@ class HiddenLayer:
         self.biases = biases
         self.rand_obj = rand_obj
 
-        if activation == 'sigmoid' or activation == None:
-            self.activation = Step()
+        # Configure Activation function
+        if activation == 'Sigmoid' or activation == None:
+            self.activation = Sigmoid()
+        elif activation == 'Tanh':
+            self.activation = Tanh()
+        elif activation == 'ReLU':
+            self.activation = ReLU()
+        else:
+            raise ValueError('specified activation function "' + activation + '" is not supported')
+
