@@ -12,19 +12,14 @@ import sys
 
 sys.path.append('../util')
 from RandomGenerator import Uniform
+from ActivationFunction import Softmax, Step
 
 class HiddenLayer:
 
-
-    def __init__(self, dim_input_signal, dim_output_signal, weights, baiases, rand_obj, activation):
+    def __init__(self, dim_input_signal, dim_output_signal, weights, biases, rand_obj, activation):
 
         if rand_obj is None:
             rand_obj = random()
-
-        self.rand_obj = rand_obj
-
-        self.dim_input_signal = dim_input_signal
-        self.dim_output_signal = dim_output_signal
 
         self.biases = [0] * dim_output_signal
 
@@ -37,4 +32,14 @@ class HiddenLayer:
                     random_generator = Uniform(-w, w)
                     weights[j][i] = random_generator.compute(rand_obj)
 
+        if biases is None:
+            self.biases = [0] * dim_output_signal
 
+        self.dim_input_signal = dim_input_signal
+        self.dim_output_signal = dim_output_signal
+        self.weights = weights
+        self.biases = biases
+        self.rand_obj = rand_obj
+
+        if activation == 'sigmoid' or activation == None:
+            self.activation = Step()
