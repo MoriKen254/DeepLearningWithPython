@@ -328,11 +328,6 @@ if __name__ == '__main__':
 
     accuracy /= CNT_TEST_DATA
 
-    # if confusion_matrix[0][0] + confusion_matrix[1][0] != 0:
-    #     precision /= confusion_matrix[0][0] + confusion_matrix[1][0]
-    # if confusion_matrix[0][0] + confusion_matrix[0][1] != 0:
-    #     recall /= confusion_matrix[0][0] + confusion_matrix[0][1]
-
     print '------------------------------------'
     print 'Logistic Regression model evaluation'
     print '------------------------------------'
