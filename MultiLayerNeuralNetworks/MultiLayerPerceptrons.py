@@ -54,7 +54,9 @@ class MutliLayerPerceptrons:
         y_err_arr = self.logisticLayer.train(hidden_output, teacher_labels, min_batch_size, learning_rate)
 
         # backward hidden layer (backpropagate)
-        #self.hidden_layer.backward
+        self.hidden_layer.backward(input_signals, hidden_output, y_err_arr, self.logisticLayer.weights,
+                                   min_batch_size, learning_rate)
+
 
 
 if __name__ == '__main__':
