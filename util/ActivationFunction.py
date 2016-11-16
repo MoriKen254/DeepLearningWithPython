@@ -7,34 +7,49 @@ This software is released under the MIT License.
 See LICENSE file included in this repository.
 """
 
+import abc
 import math
 
-class ActivationFunction:
+class ActivationFunction(object):
 
-    def __init__(self):
-        self.func_name = 'ActivationFunction'
+    def __init__(self, activation_name):
+        self.activation_name = activation_name
 
-    @classmethod
+    @abc.abstractmethod
     def compute(self, x):
-        if x >= 0:
-            return 1
-        else:
-            return -1
+        pass
+
+    @abc.abstractmethod
+    def differentiate(self, x):
+        pass
 
 
 class Step(ActivationFunction):
 
     def __init__(self):
-        super.__init__()
-        self.func_name = 'Step'
+        super(Step, self).__init__('Step')
 
-    @classmethod
     def compute(self, x):
         if x >= 0:
             return 1
         else:
             return -1
 
+    def differentiate(self, x):
+        return 0
+
+
+class Sigmoid(ActivationFunction):
+
+    def __init__(self):
+        super(Sigmoid, self).__init__('Sigmoid')
+
+    def compute(self, x):
+        den = 1. + pow(math.e, -x)
+        return 1./den
+
+    def differentiate(self, x):
+        return x * (1. - x)
 
 class Softmax:
 
