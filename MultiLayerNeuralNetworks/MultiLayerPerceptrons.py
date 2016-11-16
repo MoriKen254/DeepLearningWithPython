@@ -27,9 +27,6 @@ class MutliLayerPerceptrons:
         self.dim_hidden = dim_hidden
         self.dim_output_signal = dim_output_signal
 
-        self.weights = [[0] * dim_input_signal for i in range(dim_output_signal)]
-        self.biases = [0] * dim_output_signal
-
         if rand_obj is None:
             rand_obj = random(1234)
 
@@ -184,11 +181,6 @@ if __name__ == '__main__':
         recall[i] /= row
 
     accuracy /= CNT_TEST_DATA
-
-    # if confusion_matrix[0][0] + confusion_matrix[1][0] != 0:
-    #     precision /= confusion_matrix[0][0] + confusion_matrix[1][0]
-    # if confusion_matrix[0][0] + confusion_matrix[0][1] != 0:
-    #     recall /= confusion_matrix[0][0] + confusion_matrix[0][1]
 
     print '--------------------'
     print 'MLP model evaluation'
