@@ -21,7 +21,7 @@ class MutliLayerPerceptrons:
     Class for MutliLayerPerceptrons
     """
 
-    def __init__(self, dim_input_signal, dim_hidden, dim_output_signal, rand_obj):
+    def __init__(self, dim_input_signal, dim_hidden, dim_output_signal, rand_obj, use_csv=False):
 
         self.dim_input_signal = dim_input_signal
         self.dim_hidden = dim_hidden
@@ -31,20 +31,17 @@ class MutliLayerPerceptrons:
         self.biases = [0] * dim_output_signal
 
         if rand_obj is None:
-            rand_obj = random()
+            rand_obj = random(1234)
 
         self.rand_obj = rand_obj
 
         # construct hidden layer with tanh as activation function
-        self.hidden_layer = HiddenLayer(dim_input_signal, dim_output_signal, None, None, rand_obj, "Tanh")
+        self.hidden_layer = HiddenLayer(dim_input_signal, dim_hidden, None, None, rand_obj, "Tanh", use_csv)
 
         # construct output layer i.e. multi-class logistic layer
         self.logisticLayer = LogisticRegression(dim_hidden, dim_output_signal)
 
     def train(self, input_signals, teacher_labels, min_batch_size, learning_rate):
-
-        gradients_w = [[0] * self.dim_input_signal for i in range(self.dim_output_signal)]
-        gradients_b = [0] * self.dim_output_signal
 
         hidden_output = [[0] * self.dim_output_signal for i in range(min_batch_size)]
         y_err_arr = [[0] * self.dim_output_signal for i in range(min_batch_size)]
@@ -81,9 +78,9 @@ if __name__ == '__main__':
     test_predict_output_labels = [0] * CNT_TEST_DATA
 
     EPOCHS = 100   # maximum training epochs
-    learning_rate = 0.2 # learning rate
+    learning_rate = 0.1 # learning rate
 
-    MIN_BATCH_SIZE = 50 # number of data in each minbatch
+    MIN_BATCH_SIZE = 1 # here, we do on-line training
     CNT_MIN_BATCH = CNT_TRAIN_DATA / MIN_BATCH_SIZE
 
     train_input_data_set_min_batch = [[[0] * DIM_INPUT_SIGNAL for j in range(MIN_BATCH_SIZE)]
@@ -99,27 +96,44 @@ if __name__ == '__main__':
     #   class 2 : [0, 1], [1, 0]  ->  Positive [1, 0]
     #
 
-    train_X = [[0., 0.], [0., 1.], [1., 0.], [1., 1.]]
-    train_T = [[0, 1], [1, 0], [1, 0], [0, 1]]
-    test_X = [[0., 0.], [0., 1.], [1., 0.], [1., 1.]]
-    test_T = [[0, 1], [1, 0], [1, 0], [0, 1]]
+    train_input_data_set = [[0., 0.], [0., 1.], [1., 0.], [1., 1.]]
+    train_teacher_labels = [[0, 1], [1, 0], [1, 0], [0, 1]]
+    test_input_data_set = [[0., 0.], [0., 1.], [1., 0.], [1., 1.]]
+    test_teacher_labels = [[0, 1], [1, 0], [1, 0], [0, 1]]
 
     rand_obj = random.Random()
     rand_obj.seed(1234)
 
-    # create minbatches with training data
-    for i in range(CNT_MIN_BATCH):
-        for j in range(MIN_BATCH_SIZE):
-            idx = min_batch_indexes[i * MIN_BATCH_SIZE + j]
-            train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
-            train_teacher_data_set_min_batch[i][j] = train_teacher_labels[idx]
+    use_csv = False
+    # get argument
+    if sys.argv[1] == 'use_csv':
+        use_csv = True
+
+    if use_csv:
+        print 'Read random data set from csv file.'
+        f = open('../data/MultiLayerPerceptrons/random_index.csv', 'r')
+        reader = csv.reader(f)
+        for i in range(CNT_MIN_BATCH):
+            for j in range(MIN_BATCH_SIZE):
+                idx = int(float(reader.next()[0]))
+                train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
+                train_teacher_data_set_min_batch[i][j] = train_teacher_labels[idx]
+        f.close()
+
+    else:
+        # create minbatches with training data
+        for i in range(CNT_MIN_BATCH):
+            for j in range(MIN_BATCH_SIZE):
+                idx = min_batch_indexes[i * MIN_BATCH_SIZE + j]
+                train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
+                train_teacher_data_set_min_batch[i][j] = train_teacher_labels[idx]
 
     #
     # Build Multi-Layer Perceptrons model
     #
 
     # construct
-    classifier = MutliLayerPerceptrons(DIM_INPUT_SIGNAL, DIM_HIDDEN, DIM_OUTPUT_SIGNAL, rand_obj)
+    classifier = MutliLayerPerceptrons(DIM_INPUT_SIGNAL, DIM_HIDDEN, DIM_OUTPUT_SIGNAL, rand_obj, use_csv)
 
     # train
     for epoch in range(EPOCHS):   # training epochs

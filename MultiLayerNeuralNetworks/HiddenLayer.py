@@ -7,6 +7,7 @@ This software is released under the MIT License.
 See LICENSE file included in this repository.
 """
 
+import csv
 import random
 import sys
 
@@ -16,24 +17,29 @@ from ActivationFunction import Sigmoid, Tanh, ReLU
 
 class HiddenLayer:
 
-    def __init__(self, dim_input_signal, dim_output_signal, weights, biases, rand_obj, activation):
+    def __init__(self, dim_input_signal, dim_output_signal, weights, biases, rand_obj, activation, use_csv=False):
 
         if rand_obj is None:
-            rand_obj = random()
-
-        self.biases = [0] * dim_output_signal
+            rand_obj = random(1234)
 
         if weights is None:
             weights = [[0] * dim_input_signal for i in range(dim_output_signal)]
             w = 1./dim_input_signal
 
-            for j in range(dim_output_signal):
-                for i in range(dim_input_signal):
-                    random_generator = Uniform(-w, w)
-                    weights[j][i] = random_generator.compute(rand_obj)
+            if use_csv:
+                f = open('../data/MultiLayerPerceptrons/weights_hidden.csv', 'r')
+                reader = csv.reader(f)
+                for j, row in enumerate(reader):
+                    for i in range(dim_input_signal):
+                        weights[j][i] = float(row[i])
+            else:
+                for j in range(dim_output_signal):
+                    for i in range(dim_input_signal):
+                        random_generator = Uniform(-w, w)
+                        weights[j][i] = random_generator.compute(rand_obj)
 
         if biases is None:
-            self.biases = [0] * dim_output_signal
+            biases = [0] * dim_output_signal
 
         self.dim_input_signal = dim_input_signal
         self.dim_output_signal = dim_output_signal
@@ -52,17 +58,20 @@ class HiddenLayer:
             raise ValueError('specified activation function "' + activation + '" is not supported')
 
     def output(self, input_signals):
-        pre_activations = [0] * self.dim_output_signal
+        after_activations = [0] * self.dim_output_signal
 
         # E = Sum{ w^T * x + b }
         for j, (weight, bias) in enumerate(zip(self.weights, self.biases)):
+            pre_activation = 0
             for w, input_signal in zip(weight, input_signals):
-                pre_activations[j] += w * input_signal
+                pre_activation += w * input_signal
 
-            pre_activations[j] += bias # linear output
+            pre_activation += bias # linear output
 
-        return pre_activations
+            after_activations[j] = self.activation.compute(pre_activation)
+
+        return after_activations
 
     def foward(self, input_signals):
-        return output(input_signals)
+        return self.output(input_signals)
 
