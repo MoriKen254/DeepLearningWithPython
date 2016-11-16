@@ -57,6 +57,9 @@ class MutliLayerPerceptrons:
         self.hidden_layer.backward(input_signals, hidden_output, y_err_arr, self.logisticLayer.weights,
                                    min_batch_size, learning_rate)
 
+    def predict(self, input_signals):
+        hidden_outputs = self.hidden_layer.output(input_signals)
+        return self.logisticLayer.predict(hidden_outputs)
 
 
 if __name__ == '__main__':
@@ -79,7 +82,7 @@ if __name__ == '__main__':
     # output data predicted by the model
     test_predict_output_labels = [0] * CNT_TEST_DATA
 
-    EPOCHS = 100   # maximum training epochs
+    EPOCHS = 1000   # maximum training epochs
     learning_rate = 0.1 # learning rate
 
     MIN_BATCH_SIZE = 1 # here, we do on-line training
@@ -145,8 +148,6 @@ if __name__ == '__main__':
 
         if epoch%10 == 0:
             print 'epoch = %.lf' % epoch
-
-        learning_rate *= 0.95
 
     # test
     for i, test_input_data in enumerate(test_input_data_set):
