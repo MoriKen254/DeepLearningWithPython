@@ -51,3 +51,18 @@ class HiddenLayer:
         else:
             raise ValueError('specified activation function "' + activation + '" is not supported')
 
+    def output(self, input_signals):
+        pre_activations = [0] * self.dim_output_signal
+
+        # E = Sum{ w^T * x + b }
+        for j, (weight, bias) in enumerate(zip(self.weights, self.biases)):
+            for w, input_signal in zip(weight, input_signals):
+                pre_activations[j] += w * input_signal
+
+            pre_activations[j] += bias # linear output
+
+        return pre_activations
+
+    def foward(self, input_signals):
+        return output(input_signals)
+

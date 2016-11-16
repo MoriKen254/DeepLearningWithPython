@@ -41,6 +41,19 @@ class MutliLayerPerceptrons:
         # construct output layer i.e. multi-class logistic layer
         logisticLayer = LogisticRegression(dim_hidden, dim_output_signal)
 
+    def train(self, input_signals, teacher_labels, min_batch_size, learning_rate):
+
+        gradients_w = [[0] * self.dim_input_signal for i in range(self.dim_output_signal)]
+        gradients_b = [0] * self.dim_output_signal
+
+        hidden_output = [[0] * self.dim_output_signal for i in range(min_batch_size)]
+
+        y_err_arr = [[0] * self.dim_output_signal for i in range(min_batch_size)]
+
+        # forward hidden layer
+        for input_signal in input_signals:
+
+
 if __name__ == '__main__':
     CNT_PATTERN = 2
     CNT_TRAIN_DATA = 4 # number of training data
