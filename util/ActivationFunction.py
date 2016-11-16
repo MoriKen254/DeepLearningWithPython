@@ -51,6 +51,19 @@ class Sigmoid(ActivationFunction):
     def differentiate(self, x):
         return x * (1. - x)
 
+
+class Tanh(ActivationFunction):
+
+    def __init__(self):
+        super(Tanh, self).__init__('Tanh')
+
+    def compute(self, x):
+        return math.tanh(x)
+
+    def differentiate(self, x):
+        return 1. - x*x
+
+
 class Softmax:
 
     def __init__(self):
