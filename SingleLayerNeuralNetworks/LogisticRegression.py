@@ -71,18 +71,20 @@ class LogisticRegression:
     def output(self, input_signals):
         pre_activations = [0] * self.dim_output_signal
 
-        # E = Sum{ w^T * x + b }
+        # a = Sum{ w^T * x + b } where a if from sigma(a) = sigma(w^T * x + b) ... (2.5.9)
         for j, (weight, bias) in enumerate(zip(self.weights, self.biases)):
             for w, input_signal in zip(weight, input_signals):
                 pre_activations[j] += w * input_signal
 
             pre_activations[j] += bias # linear output
 
+        # y_k = exp(a_k) / Sum{ exp(a_k) } = exp(w_k^T * x + b_k) / Sum{ exp(w_k^T * x + b_k) } ... (2.5.18)
         return Softmax.compute(pre_activations, self.dim_output_signal)
 
 
     def predict(self, input_signals):
-
+        # a = Sum{ w^T * x + b } where a if from sigma(a) = sigma(w^T * x + b) ... (2.5.9)
+        # y_k = exp(a_k) / Sum{ exp(a_k) } = exp(w_k^T * x + b_k) / Sum{ exp(w_k^T * x + b_k) } ... (2.5.18)
         output_vals = self.output(input_signals) # activate input data through learned networks
         labels = [0] * len(output_vals) # output_vals is the probability, so cast it to label
 
@@ -94,6 +96,7 @@ class LogisticRegression:
                 max_val = output_elem
                 argmax = i
 
+        # convert to binary label [0 of 1]
         for i in range(len(labels)):
             if i == argmax:
                 labels[i] = 1 # set 1 only to the maximum label
@@ -157,8 +160,9 @@ if __name__ == '__main__':
 
     use_csv = False
     # get argument
-    if sys.argv[1] == 'use_csv':
-        use_csv = True
+    if len(sys.argv) > 1:
+        if sys.argv[1] == 'use_csv':
+            use_csv = True
 
     if use_csv:
         print 'Read random data set from csv file.'

@@ -48,6 +48,7 @@ class MutliLayerPerceptrons:
             hidden_output[i] = self.hidden_layer.foward(input_signals[i])
 
         # forward & backward output layer
+        # delta = y - t ... (2.5.32)
         y_err_arr = self.logisticLayer.train(hidden_output, teacher_labels, min_batch_size, learning_rate)
 
         # backward hidden layer (backpropagate)
@@ -55,7 +56,12 @@ class MutliLayerPerceptrons:
                                    min_batch_size, learning_rate)
 
     def predict(self, input_signals):
+        # a_j = Sum{ w^T * x + b } ... (2.5.25)
+        # z_j = h(a_j) ... (2.5.26)
         hidden_outputs = self.hidden_layer.output(input_signals)
+        # a = Sum{ w^T * x + b } where a if from sigma(a) = sigma(w^T * x + b) ... (2.5.9)
+        # y_k = exp(a_k) / Sum{ exp(a_k) } = exp(w_k^T * x + b_k) / Sum{ exp(w_k^T * x + b_k) } ... (2.5.18)
+        # convert to binary label [0 of 1]
         return self.logisticLayer.predict(hidden_outputs)
 
 
@@ -79,7 +85,7 @@ if __name__ == '__main__':
     # output data predicted by the model
     test_predict_output_labels = [0] * CNT_TEST_DATA
 
-    EPOCHS = 1000   # maximum training epochs
+    EPOCHS = 5000   # maximum training epochs
     learning_rate = 0.1 # learning rate
 
     MIN_BATCH_SIZE = 1 # here, we do on-line training
@@ -108,8 +114,9 @@ if __name__ == '__main__':
 
     use_csv = False
     # get argument
-    if sys.argv[1] == 'use_csv':
-        use_csv = True
+    if len(sys.argv) > 1:
+        if sys.argv[1] == 'use_csv':
+            use_csv = True
 
     if use_csv:
         print 'Read random data set from csv file.'
