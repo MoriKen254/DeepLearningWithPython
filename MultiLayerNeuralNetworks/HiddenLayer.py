@@ -75,23 +75,23 @@ class HiddenLayer:
     def foward(self, input_signals):
         return self.output(input_signals)
 
-    def backward(self, input_signals, hidden_output, y_err_arr, weights_prev, min_batch_size, learning_rate):
+    def backward(self, input_signals, hidden_outputs, y_err_arr, weights_prev, min_batch_size, learning_rate):
 
-        back_propagation_err = [[0] * self.dim_output_signal for i in range(min_batch_indexes)]
+        back_propagation_err = [[0] * self.dim_output_signal for i in range(min_batch_size)]
 
         gradients_w = [[0] * self.dim_input_signal for i in range(self.dim_output_signal)]
         gradients_b = [0] * self.dim_output_signal
 
         # train with SGD
         # calculate backpropagation error to get gradient of w, b
-        for n, (input_signal, y_err) in  enumerate(zip(input_signals, y_err_arr)): # n < minbatchsize
+        for n, (input_signal, hidden_output, y_err) in  enumerate(zip(input_signals, hidden_outputs, y_err_arr)): # n < minbatchsize
 
             for j in range(self.dim_output_signal): # j < dim_output_signal of current layer
 
                 for k, (y_err_elem, weight_prev) in enumerate(zip(y_err, weights_prev)): # k < dim_output_signal of previous layer
                     back_propagation_err[n][j] += weight_prev[j] * y_err_elem
 
-                back_propagation_err[n][j] *= self.activation.differentiate(hidden_output)
+                back_propagation_err[n][j] *= self.activation.differentiate(hidden_output[j])
 
                 for i, input_signal_elem in enumerate(input_signal): # i < dim_input_signal of current layer
                     gradients_w[j][i] += back_propagation_err[n][j] * input_signal_elem

@@ -43,7 +43,7 @@ class MutliLayerPerceptrons:
 
     def train(self, input_signals, teacher_labels, min_batch_size, learning_rate):
 
-        hidden_output = [[0] * self.dim_output_signal for i in range(min_batch_size)]
+        hidden_output = [[0] * min_batch_size for i in range(min_batch_size)]
         y_err_arr = [[0] * self.dim_output_signal for i in range(min_batch_size)]
 
         # forward hidden layer
