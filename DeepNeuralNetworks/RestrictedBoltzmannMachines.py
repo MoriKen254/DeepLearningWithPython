@@ -12,10 +12,14 @@ import csv
 import sys
 import random
 
-from HiddenLayer import HiddenLayer
-
 sys.path.append('../SingleLayerNeuralNetworks')
 from LogisticRegression import LogisticRegression
+
+sys.path.append('../MultiLayerNeuralNetworks')
+from HiddenLayer import HiddenLayer
+
+sys.path.append('../util')
+from RandomGenerator import Binomial
 
 class RestrictedBoltzmannMachines:
     u"""
@@ -132,28 +136,44 @@ if __name__ == '__main__':
         if sys.argv[1] == 'use_csv':
             use_csv = True
 
-    for pattern_idx in range(CNT_PATTERN):  # train for each pattern. pattern_idx < 3
-        for n in range(CNT_TRAIN_DATA_EACH): # train for the number of data set for each pattern. n < 200
-            train_data_idx = pattern_idx * n
+    if use_csv:
+        pass
+    else:
+        binomial_train_true = Binomial(1, 1 - PROB_NOISE_TRAIN)
+        binomial_train_false = Binomial(1, PROB_NOISE_TRAIN)
 
-            for visible_idx in range(CNT_VISIBLE): # visible_idx < 4
-                is_pattern_idx_in_curr_part = train_data_idx >= CNT_TRAIN_DATA_EACH * pattern_idx and \
-                                              train_data_idx <  CNT_TRAIN_DATA_EACH * (pattern_idx + 1)
-                is_visible_idx_in_curr_part = train_data_idx >= CNT_TRAIN_DATA_EACH * visible_idx and \
-                                              train_data_idx <  CNT_TRAIN_DATA_EACH * (visible_idx + 1)
+        binomial_test_true = Binomial(1, 1 - PROB_NOISE_TEST)
+        binomial_test_false = Binomial(1, PROB_NOISE_TEST)
+
+        for pattern_idx in range(CNT_PATTERN):  # train for each pattern. pattern_idx < 3
+            # create training data
+            for n in range(CNT_TRAIN_DATA_EACH): # train for the number of data set for each pattern. n < 200
+                train_data_idx = pattern_idx * CNT_TRAIN_DATA_EACH + n
+
+                for visible_idx in range(CNT_VISIBLE): # visible_idx < 4
+                    is_pattern_idx_in_curr_part = train_data_idx >= CNT_TRAIN_DATA_EACH * pattern_idx and \
+                                                  train_data_idx <  CNT_TRAIN_DATA_EACH * (pattern_idx + 1)
+                    is_visible_idx_in_curr_part = visible_idx    >= CNT_VISIBLE_EACH    * pattern_idx and \
+                                                  visible_idx    <  CNT_VISIBLE_EACH    * (pattern_idx + 1)
+                    if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
+                        train_input_data_set[train_data_idx][visible_idx] = binomial_train_true.compute(rand_obj)
+                    else:
+                        train_input_data_set[train_data_idx][visible_idx] = binomial_train_false.compute(rand_obj)
+
+            # create test data
+            for n in range(CNT_TEST_DATA_EACH): # train for the number of data set for each pattern. n < 200
+                test_data_idx = pattern_idx * CNT_TEST_DATA_EACH + n
+
+                for visible_idx in range(CNT_VISIBLE): # visible_idx < 4
+                    is_pattern_idx_in_curr_part = test_data_idx >= CNT_TEST_DATA_EACH * pattern_idx and \
+                                                  test_data_idx <  CNT_TEST_DATA_EACH * (pattern_idx + 1)
+                    is_visible_idx_in_curr_part = visible_idx   >= CNT_VISIBLE_EACH   * pattern_idx and \
+                                                  visible_idx   <  CNT_VISIBLE_EACH   * (pattern_idx + 1)
                 if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
-                    pass
-                else
-                    pass
+                    test_input_data_set[test_data_idx][visible_idx] = binomial_test_true.compute(rand_obj)
+                else:
+                    test_input_data_set[test_data_idx][visible_idx] = binomial_test_false.compute(rand_obj)
 
-
-
-
-
-    train_input_data_set = [[0., 0.], [0., 1.], [1., 0.], [1., 1.]]
-    train_teacher_labels = [[0, 1], [1, 0], [1, 0], [0, 1]]
-    test_input_data_set = [[0., 0.], [0., 1.], [1., 0.], [1., 1.]]
-    test_teacher_labels = [[0, 1], [1, 0], [1, 0], [0, 1]]
 
     if use_csv:
         print 'Read random data set from csv file.'
@@ -163,7 +183,6 @@ if __name__ == '__main__':
             for j in range(MIN_BATCH_SIZE):
                 idx = int(float(reader.next()[0]))
                 train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
-                train_teacher_data_set_min_batch[i][j] = train_teacher_labels[idx]
         f.close()
 
     else:
@@ -172,7 +191,6 @@ if __name__ == '__main__':
             for j in range(MIN_BATCH_SIZE):
                 idx = min_batch_indexes[i * MIN_BATCH_SIZE + j]
                 train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
-                train_teacher_data_set_min_batch[i][j] = train_teacher_labels[idx]
 
     #
     # Build Multi-Layer Perceptrons model
