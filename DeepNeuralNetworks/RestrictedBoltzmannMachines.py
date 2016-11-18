@@ -19,29 +19,48 @@ sys.path.append('../MultiLayerNeuralNetworks')
 from HiddenLayer import HiddenLayer
 
 sys.path.append('../util')
-from RandomGenerator import Binomial
+from RandomGenerator import Uniform, Binomial
 
 class RestrictedBoltzmannMachines:
     u"""
     Class for MutliLayerPerceptrons
     """
 
-    def __init__(self, dim_input_signal, dim_hidden, dim_output_signal, rand_obj, use_csv=False):
-
-        self.dim_input_signal = dim_input_signal
-        self.dim_hidden = dim_hidden
-        self.dim_output_signal = dim_output_signal
+    def __init__(self, dim_visible, dim_hidden, weights, hidden_biases, visible_biases, rand_obj, use_csv=False):
 
         if rand_obj is None:
             rand_obj = random(1234)
 
         self.rand_obj = rand_obj
 
-        # construct hidden layer with tanh as activation function
-        self.hidden_layer = HiddenLayer(dim_input_signal, dim_hidden, None, None, rand_obj, "Tanh", use_csv)
+        if weights is None:
+            weights_tmp = [[0] * dim_visible for j in range(dim_hidden)]
+            w = 1. / dim_visible
+            random_generator = Uniform(-w, w)
 
-        # construct output layer i.e. multi-class logistic layer
-        self.logisticLayer = LogisticRegression(dim_hidden, dim_output_signal)
+            for j in range(dim_hidden):
+                for i in range(dim_visible):
+                    weights_tmp[j][i] = random_generator.compute(rand_obj)
+        else:
+            weights_tmp = weights
+
+        if hidden_biases is None:
+            hidden_biases_tmp = [0] * dim_hidden
+        else:
+            hidden_biases_tmp = hidden_biases
+
+        if visible_biases is None:
+            visible_biases_tmp = [0] * dim_visible
+        else:
+            visible_biases_tmp = visible_biases
+
+        self.dim_visible = dim_visible
+        self.dim_hidden = dim_hidden
+        self.weights = weights_tmp
+        self.hidden_bias = hidden_biases_tmp
+        self.visible_biases = visible_biases_tmp
+        self.rand_obj = rand_obj
+
 
     def train(self, input_signals, teacher_labels, min_batch_size, learning_rate):
 
@@ -83,23 +102,23 @@ if __name__ == '__main__':
     CNT_TRAIN_DATA      = CNT_TRAIN_DATA_EACH * CNT_PATTERN # number of training data
     CNT_TEST_DATA       = CNT_TEST_DATA_EACH * CNT_PATTERN  # number of test data
 
-    CNT_VISIBLE         = CNT_VISIBLE_EACH * CNT_PATTERN    # number of test data
+    DIM_VISIBLE         = CNT_VISIBLE_EACH * CNT_PATTERN    # number of test data
     DIM_HIDDEN          = 6             # dimensions of hidden
 
     # DIM_INPUT_SIGNAL    = 2             # dimensions of input data
     # DIM_OUTPUT_SIGNAL   = CNT_PATTERN   # dimensions of output data
 
     # input data for training
-    train_input_data_set = [[0] * CNT_VISIBLE for j in range(CNT_TRAIN_DATA)]
+    train_input_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TRAIN_DATA)]
     # output data (label) for training
     #train_teacher_labels = [0] * CNT_TRAIN_DATA
 
     # input data for test
-    test_input_data_set = [[0] * CNT_VISIBLE for j in range(CNT_TEST_DATA)]
+    test_input_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TEST_DATA)]
     # label for inputs
     #test_teacher_labels = [0] * CNT_TEST_DATA
     # output data predicted by the model
-    test_restricted_data_set = [[0] * CNT_VISIBLE for j in range(CNT_TEST_DATA)]
+    test_restricted_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TEST_DATA)]
 
     EPOCHS = 1000           # maximum training epochs
     learning_rate = 0.2     # learning rate
@@ -107,9 +126,9 @@ if __name__ == '__main__':
     MIN_BATCH_SIZE = 10     # here, we do on-line training
     CNT_MIN_BATCH = CNT_TRAIN_DATA / MIN_BATCH_SIZE
 
-    train_input_data_set_min_batch = [[[0] * CNT_VISIBLE for j in range(MIN_BATCH_SIZE)]
+    train_input_data_set_min_batch = [[[0] * DIM_VISIBLE for j in range(MIN_BATCH_SIZE)]
                                       for k in range(CNT_MIN_BATCH)]
-    train_teacher_data_set_min_batch = [[[0] * CNT_VISIBLE for j in range(MIN_BATCH_SIZE)]
+    train_teacher_data_set_min_batch = [[[0] * DIM_VISIBLE for j in range(MIN_BATCH_SIZE)]
                                         for k in range(CNT_MIN_BATCH)]
     min_batch_indexes = range(CNT_TRAIN_DATA)
     random.shuffle(min_batch_indexes)   # shuffle data index for SGD
@@ -137,7 +156,29 @@ if __name__ == '__main__':
             use_csv = True
 
     if use_csv:
-        pass
+        file_dir = '../data/DeepNeuralNetworks/RestrictedBoltzmannMachines/'
+        for pattern_idx in range(CNT_PATTERN):  # train for each pattern. pattern_idx < 3
+
+            # create training data
+            f = open(file_dir  + 'train' + str(pattern_idx + 1) + '.csv', 'r')
+            reader = csv.reader(f)
+            for n in range(CNT_TRAIN_DATA_EACH): # train for the number of data set for each pattern. n < 200
+                train_data_idx = pattern_idx * CNT_TRAIN_DATA_EACH + n
+                data = reader.next()
+                for visible_idx in range(DIM_VISIBLE): # visible_idx < 4
+                    train_input_data_set[train_data_idx][visible_idx] = float(data[visible_idx])
+            f.close()
+
+            # create test data
+            f = open(file_dir  + 'test' + str(pattern_idx + 1) + '.csv', 'r')
+            reader = csv.reader(f)
+            for n in range(CNT_TEST_DATA_EACH): # train for the number of data set for each pattern. n < 200
+                test_data_idx = pattern_idx * CNT_TEST_DATA_EACH + n
+                data = reader.next()
+                for visible_idx in range(DIM_VISIBLE): # visible_idx < 4
+                    test_input_data_set[test_data_idx][visible_idx] = float(data[visible_idx])
+            f.close()
+
     else:
         binomial_train_true = Binomial(1, 1 - PROB_NOISE_TRAIN)
         binomial_train_false = Binomial(1, PROB_NOISE_TRAIN)
@@ -150,7 +191,7 @@ if __name__ == '__main__':
             for n in range(CNT_TRAIN_DATA_EACH): # train for the number of data set for each pattern. n < 200
                 train_data_idx = pattern_idx * CNT_TRAIN_DATA_EACH + n
 
-                for visible_idx in range(CNT_VISIBLE): # visible_idx < 4
+                for visible_idx in range(DIM_VISIBLE): # visible_idx < 4
                     is_pattern_idx_in_curr_part = train_data_idx >= CNT_TRAIN_DATA_EACH * pattern_idx and \
                                                   train_data_idx <  CNT_TRAIN_DATA_EACH * (pattern_idx + 1)
                     is_visible_idx_in_curr_part = visible_idx    >= CNT_VISIBLE_EACH    * pattern_idx and \
@@ -164,7 +205,7 @@ if __name__ == '__main__':
             for n in range(CNT_TEST_DATA_EACH): # train for the number of data set for each pattern. n < 200
                 test_data_idx = pattern_idx * CNT_TEST_DATA_EACH + n
 
-                for visible_idx in range(CNT_VISIBLE): # visible_idx < 4
+                for visible_idx in range(DIM_VISIBLE): # visible_idx < 4
                     is_pattern_idx_in_curr_part = test_data_idx >= CNT_TEST_DATA_EACH * pattern_idx and \
                                                   test_data_idx <  CNT_TEST_DATA_EACH * (pattern_idx + 1)
                     is_visible_idx_in_curr_part = visible_idx   >= CNT_VISIBLE_EACH   * pattern_idx and \
@@ -177,7 +218,7 @@ if __name__ == '__main__':
 
     if use_csv:
         print 'Read random data set from csv file.'
-        f = open('../data/MultiLayerPerceptrons/random_index.csv', 'r')
+        f = open('../data/DeepNeuralNetworks/RestrictedBoltzmannMachines/random_index.csv', 'r')
         reader = csv.reader(f)
         for i in range(CNT_MIN_BATCH):
             for j in range(MIN_BATCH_SIZE):
@@ -197,7 +238,7 @@ if __name__ == '__main__':
     #
 
     # construct
-    classifier = MutliLayerPerceptrons(DIM_INPUT_SIGNAL, DIM_HIDDEN, DIM_OUTPUT_SIGNAL, rand_obj, use_csv)
+    classifier = RestrictedBoltzmannMachines(DIM_VISIBLE, DIM_HIDDEN, None, None, None, rand_obj)
 
     # train
     for epoch in range(EPOCHS):   # training epochs
