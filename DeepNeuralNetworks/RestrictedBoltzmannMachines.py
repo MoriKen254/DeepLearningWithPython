@@ -106,21 +106,18 @@ class RestrictedBoltzmannMachines:
                 gradients_hidden_b[j] += mean_prob_hid_pos - mean_prob_hid_neg
 
             for i, (input_elem, sample_vis_neg) in enumerate(zip(input_signal, samples_vis_neg)):
-                gradients_visible_b[j][i] += input_elem - sample_vis_neg
+                gradients_visible_b[i] += input_elem - sample_vis_neg
 
         # update params
+        for j, (gradient_w, gradient_hidden_b) in enumerate(zip(gradients_w, gradients_hidden_b)):
+            for i, (gradient_w_elem) in enumerate(gradient_w):
+                self.weights[j][i] += learning_rate * gradient_w_elem / min_batch_size
 
-        a = 0
+            self.hidden_biases[j] += learning_rate * gradient_hidden_b / min_batch_size
 
-        hidden_output[i] = self.hidden_layer.foward(input_signals[i])
+        for i, gradient_visible_b in enumerate(gradients_visible_b):
+            self.visible_biases[i] += learning_rate * gradient_visible_b / min_batch_size
 
-        # forward & backward output layer
-        # delta = y - t ... (2.5.32)
-        y_err_arr = self.logisticLayer.train(hidden_output, teacher_labels, min_batch_size, learning_rate)
-
-        # backward hidden layer (backpropagate)
-        self.hidden_layer.backward(input_signals, hidden_output, y_err_arr, self.logisticLayer.weights,
-                                   min_batch_size, learning_rate)
 
     def gibbsHidVisHid(self, samples_hid_init, means_prob_vis_neg, samples_vis_neg,
                                                means_prob_hid_neg, samples_hid_neg):
@@ -321,6 +318,8 @@ if __name__ == '__main__':
         for (train_input_data_min_batch, train_teacher_data_min_batch) in \
                 zip(train_input_data_set_min_batch, train_teacher_data_set_min_batch):
             rbm.contrastiveDivergence(train_input_data_min_batch, MIN_BATCH_SIZE, learning_rate, 1)
+
+        learning_rate *= 0.995
 
         if epoch%10 == 0:
             print 'epoch = %.lf' % epoch
