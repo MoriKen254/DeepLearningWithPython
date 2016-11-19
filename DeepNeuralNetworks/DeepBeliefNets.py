@@ -16,6 +16,9 @@ sys.path.append('../SingleLayerNeuralNetworks')
 from LogisticRegression import LogisticRegression
 sys.path.append('../MultiLayerNeuralNetworks')
 from HiddenLayer import HiddenLayer
+sys.path.append('../util')
+from ActivationFunction import Sigmoid
+from RandomGenerator import Uniform, Binomial
 
 class DeepBeliefNets:
 
@@ -29,13 +32,13 @@ class DeepBeliefNets:
         self.dim_input_signal = dim_input_signal
         self.dims_hidden_layers = dims_hidden_layers
         self.dim_output_signal = dim_output_layer
-        self.cnt_layers = dims_hidden_layers.size
+        self.cnt_layers = len(dims_hidden_layers)
         self.sigmoid_layers = []#HiddenLayer(self.cnt_layers)
         self.rbm_layers = []
 
         # construct multi-layer
         dim_prev_layer_input = 0
-        for i, (dim_hidden_layer, sigmoid_layer) in enumerate(self.dims_hidden_layers, self.sigmoid_layers):
+        for i, dim_hidden_layer in enumerate(self.dims_hidden_layers):
             if i == 0:
                 dim_curr_layer_input = dim_input_signal
             else:
@@ -44,11 +47,12 @@ class DeepBeliefNets:
             # construct hidden layers with sigmoid function
             #   weight matrices and bias vectors will be shared with RBM layers
             self.sigmoid_layers.append(HiddenLayer(dim_curr_layer_input, dim_hidden_layer,
-                                                   None, None, rand_obj, 'sigmoid'))
+                                                   None, None, rand_obj, 'Sigmoid'))
 
             # construct RBM layers
             self.rbm_layers.append(RestrictedBoltzmannMachines(dim_curr_layer_input, dim_hidden_layer,
-                                                               sigmoid_layer.weights, sigmoid_layer.biases, None, rand_obj))
+                                                               self.sigmoid_layers[i].weights,
+                                                               self.sigmoid_layers[i].biases, None, rand_obj))
 
             dim_prev_layer_input = dim_hidden_layer
 
@@ -59,51 +63,55 @@ class DeepBeliefNets:
 if __name__ == '__main__':
 
     CNT_TRAIN_DATA_EACH = 200           # for demo
+    CNT_VALID_DATA_EACH = 200      # for demo
     CNT_TEST_DATA_EACH  = 2             # for demo
-    CNT_VISIBLE_EACH    = 4             # for demo
-    PROB_NOISE_TRAIN    = 0.05          # for demo
+    CNT_INPUT_EACH      = 20            # for demo
+    PROB_NOISE_TRAIN    = 0.2           # for demo
     PROB_NOISE_TEST     = 0.25          # for demo
 
     CNT_PATTERN         = 3
 
-    CNT_TRAIN_DATA      = CNT_TRAIN_DATA_EACH * CNT_PATTERN # number of training data
-    CNT_TEST_DATA       = CNT_TEST_DATA_EACH * CNT_PATTERN  # number of test data
+    CNT_TRAIN_DATA      = CNT_TRAIN_DATA_EACH * CNT_PATTERN       # number of training data
+    CNT_VALID_DATA      = CNT_VALID_DATA_EACH * CNT_PATTERN       # number of validation data
+    CNT_TEST_DATA       = CNT_TEST_DATA_EACH * CNT_PATTERN        # number of test data
 
-    DIM_VISIBLE         = CNT_VISIBLE_EACH * CNT_PATTERN    # number of test data
-    DIM_HIDDEN          = 6             # dimensions of hidden
+    CNT_INPUT_DATA      = CNT_INPUT_EACH * CNT_PATTERN            # number of input data
+    CNT_OUTPUT_DATA     = CNT_PATTERN                             # number of output data
+    DIMS_HIDDEN_LAYERS  = [20, 20]
+    CD_K_ITERATION      = 1             # CD-k in RBM
 
     # input data for training
-    train_input_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TRAIN_DATA)]
-    # input data for test
-    test_input_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TEST_DATA)]
+    train_input_data_set = [[0] * CNT_INPUT_DATA for j in range(CNT_TRAIN_DATA)]
+
+    # input data for validation
+    valid_input_data_set = [[0] * CNT_INPUT_DATA for j in range(CNT_VALID_DATA)]
+    valid_teacher_data_set = [[0] * CNT_OUTPUT_DATA for j in range(CNT_VALID_DATA)]
+
+    test_input_data_set = [[0] * CNT_INPUT_DATA for j in range(CNT_TEST_DATA)]
+    test_teacher_data_set = [[0] * CNT_OUTPUT_DATA for j in range(CNT_TEST_DATA)]
     # output data predicted by the model
-    test_restricted_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TEST_DATA)]
-    reconstructed_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TEST_DATA)]
+    predicted_teacher_data_set = [[0] * CNT_OUTPUT_DATA for j in range(CNT_TEST_DATA)]
 
-    EPOCHS = 1000           # maximum training epochs
-    learning_rate = 0.2     # learning rate
+    PRETRAIN_EPOCHS = 1000          # maximum pre-training epochs
+    PRETRAIN_LEARNING_RATE = 0.2    # learning rate for  pre-training
+    FINETUNE_EPOCHS = 1000          # maximum fine-tune epochs
+    FINETUNE_LEARNING_RATE = 0.15   # learning rate for  fine-tune
 
-    MIN_BATCH_SIZE = 10     # here, we do on-line training
-    CNT_MIN_BATCH = CNT_TRAIN_DATA / MIN_BATCH_SIZE
+    MIN_BATCH_SIZE = 50
+    CNT_MIN_BATCH_TRAIN = CNT_TRAIN_DATA / MIN_BATCH_SIZE
+    CNT_MIN_BATCH_VALID = CNT_VALID_DATA / MIN_BATCH_SIZE
 
-    train_input_data_set_min_batch = [[[0] * DIM_VISIBLE for j in range(MIN_BATCH_SIZE)]
-                                      for k in range(CNT_MIN_BATCH)]
-    train_teacher_data_set_min_batch = [[[0] * DIM_VISIBLE for j in range(MIN_BATCH_SIZE)]
-                                        for k in range(CNT_MIN_BATCH)]
+    train_input_data_set_min_batch = [[[0] * CNT_INPUT_DATA for j in range(MIN_BATCH_SIZE)]
+                                      for k in range(CNT_MIN_BATCH_TRAIN)]
+    valid_input_data_set_min_batch = [[[0] * CNT_INPUT_DATA for j in range(MIN_BATCH_SIZE)]
+                                        for k in range(CNT_MIN_BATCH_VALID)]
+    valid_teacher_data_set_min_batch = [[[0] * CNT_INPUT_DATA for j in range(MIN_BATCH_SIZE)]
+                                        for k in range(CNT_MIN_BATCH_VALID)]
     min_batch_indexes = range(CNT_TRAIN_DATA)
     random.shuffle(min_batch_indexes)   # shuffle data index for SGD
 
     #
     # Create training data and test data for demo.
-    #   Data without noise would be:
-    #     class 1 : [1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0] ... pattern_idx = 0
-    #     class 2 : [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0] ... pattern_idx = 1
-    #     class 3 : [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1] ... pattern_idx = 2
-    #                |  |  |  |  |  |  |  |  |  |  |  |
-    # (visible_idx:  0  1  2  3  0  1  2  3  0  1  2  3)
-    #   and to each data, we add some noise.
-    #   For example, one of the data in class 1 could be:
-    #     [1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1]
     #
 
     rand_obj = random.Random()
@@ -125,8 +133,8 @@ if __name__ == '__main__':
             for n in range(CNT_TRAIN_DATA_EACH): # train for the number of data set for each pattern. n < 200
                 train_data_idx = pattern_idx * CNT_TRAIN_DATA_EACH + n
                 data = reader.next()
-                for visible_idx in range(DIM_VISIBLE): # visible_idx < 4
-                    train_input_data_set[train_data_idx][visible_idx] = float(data[visible_idx])
+                for input_idx in range(DIM_VISIBLE): # visible_idx < 4
+                    train_input_data_set[train_data_idx][input_idx] = float(data[input_idx])
             f.close()
 
             # create test data
@@ -135,8 +143,8 @@ if __name__ == '__main__':
             for n in range(CNT_TEST_DATA_EACH): # train for the number of data set for each pattern. n < 200
                 test_data_idx = pattern_idx * CNT_TEST_DATA_EACH + n
                 data = reader.next()
-                for visible_idx in range(DIM_VISIBLE): # visible_idx < 4
-                    test_input_data_set[test_data_idx][visible_idx] = float(data[visible_idx])
+                for input_idx in range(DIM_VISIBLE): # visible_idx < 4
+                    test_input_data_set[test_data_idx][input_idx] = float(data[input_idx])
             f.close()
 
     else:
@@ -151,54 +159,80 @@ if __name__ == '__main__':
             for n in range(CNT_TRAIN_DATA_EACH): # train for the number of data set for each pattern. n < 200
                 train_data_idx = pattern_idx * CNT_TRAIN_DATA_EACH + n
 
-                for visible_idx in range(DIM_VISIBLE): # visible_idx < 4
+                for input_idx in range(CNT_INPUT_DATA): # visible_idx < 4
                     is_pattern_idx_in_curr_part = train_data_idx >= CNT_TRAIN_DATA_EACH * pattern_idx and \
                                                   train_data_idx <  CNT_TRAIN_DATA_EACH * (pattern_idx + 1)
-                    is_visible_idx_in_curr_part = visible_idx    >= CNT_VISIBLE_EACH    * pattern_idx and \
-                                                  visible_idx    <  CNT_VISIBLE_EACH    * (pattern_idx + 1)
+                    is_visible_idx_in_curr_part = input_idx >= CNT_INPUT_EACH * pattern_idx and \
+                                                  input_idx < CNT_INPUT_EACH * (pattern_idx + 1)
                     if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
-                        train_input_data_set[train_data_idx][visible_idx] = binomial_train_true.compute(rand_obj)
+                        train_input_data_set[train_data_idx][input_idx] = binomial_train_true.compute(rand_obj)
                     else:
-                        train_input_data_set[train_data_idx][visible_idx] = binomial_train_false.compute(rand_obj)
+                        train_input_data_set[train_data_idx][input_idx] = binomial_train_false.compute(rand_obj)
+
+            # create validation data
+            for n in range(CNT_VALID_DATA_EACH):
+                valid_data_idx = pattern_idx * CNT_VALID_DATA_EACH + n
+
+                for input_idx in range(CNT_INPUT_DATA): # visible_idx < 4
+                    is_pattern_idx_in_curr_part = train_data_idx >= CNT_VALID_DATA_EACH * pattern_idx and \
+                                                  train_data_idx <  CNT_VALID_DATA_EACH * (pattern_idx + 1)
+                    is_visible_idx_in_curr_part = input_idx >= CNT_INPUT_EACH * pattern_idx and \
+                                                  input_idx <  CNT_INPUT_EACH * (pattern_idx + 1)
+                    if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
+                        valid_input_data_set[train_data_idx][input_idx] = binomial_train_true.compute(rand_obj)
+                    else:
+                        valid_input_data_set[train_data_idx][input_idx] = binomial_train_false.compute(rand_obj)
+
+                for output_idx in range(CNT_OUTPUT_DATA):
+                    if output_idx == pattern_idx:
+                        valid_teacher_data_set[valid_data_idx][output_idx] = 1
+                    else:
+                        valid_teacher_data_set[valid_data_idx][output_idx] = 0
 
             # create test data
             for n in range(CNT_TEST_DATA_EACH): # train for the number of data set for each pattern. n < 200
                 test_data_idx = pattern_idx * CNT_TEST_DATA_EACH + n
 
-                for visible_idx in range(DIM_VISIBLE): # visible_idx < 4
+                for input_idx in range(CNT_INPUT_DATA): # visible_idx < 4
                     is_pattern_idx_in_curr_part = test_data_idx >= CNT_TEST_DATA_EACH * pattern_idx and \
                                                   test_data_idx <  CNT_TEST_DATA_EACH * (pattern_idx + 1)
-                    is_visible_idx_in_curr_part = visible_idx   >= CNT_VISIBLE_EACH   * pattern_idx and \
-                                                  visible_idx   <  CNT_VISIBLE_EACH   * (pattern_idx + 1)
+                    is_visible_idx_in_curr_part = input_idx >= CNT_INPUT_EACH * pattern_idx and \
+                                                  input_idx <  CNT_INPUT_EACH * (pattern_idx + 1)
                     if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
-                        test_input_data_set[test_data_idx][visible_idx] = binomial_test_true.compute(rand_obj)
+                        test_input_data_set[test_data_idx][input_idx] = binomial_test_true.compute(rand_obj)
                     else:
-                        test_input_data_set[test_data_idx][visible_idx] = binomial_test_false.compute(rand_obj)
+                        test_input_data_set[test_data_idx][input_idx] = binomial_test_false.compute(rand_obj)
 
 
     if use_csv:
         print 'Read random data set from csv file.'
         f = open('../data/DeepNeuralNetworks/RestrictedBoltzmannMachines/random_index.csv', 'r')
         reader = csv.reader(f)
-        for i in range(CNT_MIN_BATCH):
-            for j in range(MIN_BATCH_SIZE):
+        for j in range(MIN_BATCH_SIZE):
+            for i in range(CNT_MIN_BATCH_TRAIN):
                 idx = int(float(reader.next()[0]))
                 train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
         f.close()
 
     else:
         # create minbatches with training data
-        for i in range(CNT_MIN_BATCH):
-            for j in range(MIN_BATCH_SIZE):
+        for j in range(MIN_BATCH_SIZE):
+            for i in range(CNT_MIN_BATCH_TRAIN):
                 idx = min_batch_indexes[i * MIN_BATCH_SIZE + j]
                 train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
+            for i in range(CNT_MIN_BATCH_VALID):
+                idx = min_batch_indexes[i * MIN_BATCH_SIZE + j]
+                valid_input_data_set_min_batch[i][j] = valid_input_data_set[idx]
+                valid_teacher_data_set_min_batch[i][j] = valid_teacher_data_set[idx]
 
     #
-    # Build Multi-Layer Perceptrons model
+    # Build Deep Belief Nets model
     #
 
-    # construct
-    rbm = RestrictedBoltzmannMachines(DIM_VISIBLE, DIM_HIDDEN, None, None, None, rand_obj, use_csv)
+    # construct DBN
+    print 'Building the model...'
+    classifier = DeepBeliefNets(CNT_INPUT_DATA, DIMS_HIDDEN_LAYERS, CNT_OUTPUT_DATA, rand_obj)
+    print 'done.'
 
     # train
     for epoch in range(EPOCHS):   # training epochs
