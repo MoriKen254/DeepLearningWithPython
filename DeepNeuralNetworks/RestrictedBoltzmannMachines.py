@@ -62,13 +62,38 @@ class RestrictedBoltzmannMachines:
         self.rand_obj = rand_obj
 
 
-    def train(self, input_signals, teacher_labels, min_batch_size, learning_rate):
+    def contrastiveDivergence(self, input_signals, min_batch_size, learning_rate, cd_k_iteration):
 
-        hidden_output = [[0] * min_batch_size for i in range(min_batch_size)]
+        gradients_w = [[0] * self.dim_visible for i in range(self.dim_hidden)]
+        gradients_hidden_b = [0] * self.dim_hidden
+        gradients_visible_b = [0] * self.dim_visible
+
+        # train with mibatches
+        for n in range(min_batch_size):
+
+        # nhSamples -> hidden_init_samples
+        # phSamples -> hidden_samples
+
+
         y_err_arr = [[0] * self.dim_output_signal for i in range(min_batch_size)]
 
         # forward hidden layer
-        for i in range(min_batch_size):
+        for n in range(min_batch_size):
+
+            means_prob_hidden_positive = [0] * self.dim_hidden        # for positive phase
+            samples_prob_hidden_positive = [0] * self.dim_hidden      # for positive phase
+            means_prob_visible_negative = [0] * self.dim_visible      # for negative phase
+            samples_prob_visible_negative = [0] * self.dim_visible    # for negative phase
+            means_prob_hidden_negative = [0] * self.dim_hidden        # for positive phase
+            samples_prob_hidden_negative = [0] * self.dim_hidden      # for positive phase
+
+            # CD-k: CD-1 is enough for sampling (i.e. k=1)
+
+            for step in range(cd_k_iteration):
+
+                # Gibbs sampling
+            if step == 0:
+
             hidden_output[i] = self.hidden_layer.foward(input_signals[i])
 
         # forward & backward output layer
@@ -238,13 +263,13 @@ if __name__ == '__main__':
     #
 
     # construct
-    classifier = RestrictedBoltzmannMachines(DIM_VISIBLE, DIM_HIDDEN, None, None, None, rand_obj)
+    rbm = RestrictedBoltzmannMachines(DIM_VISIBLE, DIM_HIDDEN, None, None, None, rand_obj)
 
     # train
     for epoch in range(EPOCHS):   # training epochs
         for (train_input_data_min_batch, train_teacher_data_min_batch) in \
                 zip(train_input_data_set_min_batch, train_teacher_data_set_min_batch):
-            classifier.train(train_input_data_min_batch, train_teacher_data_min_batch, MIN_BATCH_SIZE, learning_rate)
+            rbm.contrastiveDivergence(train_input_data_min_batch, MIN_BATCH_SIZE, learning_rate, 1)
 
         if epoch%10 == 0:
             print 'epoch = %.lf' % epoch
