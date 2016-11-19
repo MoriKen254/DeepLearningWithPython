@@ -62,7 +62,7 @@ class DeepBeliefNets:
     def pretrain(self, input_signals_arr, min_batch_size, cnt_min_batch, epochs, learning_rate, cd_k_iter):
         for layer in range(self.cnt_layers):
             for epoch in range(epochs):
-                for input_signals in range(input_signals_arr):
+                for input_signals in input_signals_arr:
 
                     input_signals_tmp = [[0] * self.dim_input_signal for j in range(min_batch_size)]
 
@@ -76,6 +76,8 @@ class DeepBeliefNets:
 
                         for i, signal_prev_layer in enumerate(signals_prev_layer):
                             input_signals_tmp[i] = self.sigmoid_layers[layer-1].output_binomial(signal_prev_layer, rand_obj)
+
+                    self.rbm_layers[layer].contrastiveDivergence(input_signals_tmp, min_batch_size, learning_rate, cd_k_iter)
 
 
 
@@ -255,7 +257,7 @@ if __name__ == '__main__':
 
     # pre-training the model
     print 'Pre-training the model...'
-    classifier.pretrain(CNT_MIN_BATCH_TRAIN, MIN_BATCH_SIZE, CNT_MIN_BATCH_TRAIN, PRETRAIN_EPOCHS,
+    classifier.pretrain(train_input_data_set_min_batch, MIN_BATCH_SIZE, CNT_MIN_BATCH_TRAIN, PRETRAIN_EPOCHS,
                         PRETRAIN_LEARNING_RATE, CD_K_ITERATION)
     # classifier.
     print 'done.'
