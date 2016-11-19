@@ -12,7 +12,7 @@ import random
 import sys
 
 sys.path.append('../util')
-from RandomGenerator import Uniform
+from RandomGenerator import Uniform, Binomial
 from ActivationFunction import Sigmoid, Tanh, ReLU
 
 class HiddenLayer:
@@ -115,3 +115,17 @@ class HiddenLayer:
 
         return back_propagation_err
 
+    def output_binomial(self, input_signals, rand_obj):
+        output_val = [0] * self.dim_output_signal
+
+        input_casts = [0] * len(input_signals)
+        for i, input_elem in enumerate(input_signals):
+            input_casts[i] = float(input_elem)
+
+        out = self.output(input_casts)
+
+        for j, out_elem in enumerate(out):
+            binomial = Binomial(1, out_elem)
+            output_val[j] = binomial.compute(rand_obj)
+
+        return output_val

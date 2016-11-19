@@ -59,6 +59,25 @@ class DeepBeliefNets:
         # logistic regression layer for output
         self.logistic_layer = LogisticRegression(self.dims_hidden_layers[self.cnt_layers-1], self.dim_output_signal)
 
+    def pretrain(self, input_signals_arr, min_batch_size, cnt_min_batch, epochs, learning_rate, cd_k_iter):
+        for layer in range(self.cnt_layers):
+            for epoch in range(epochs):
+                for input_signals in range(input_signals_arr):
+
+                    input_signals_tmp = [[0] * self.dim_input_signal for j in range(min_batch_size)]
+
+                    # Set input data for current layer
+                    if layer == 0:
+                        input_signals_tmp = input_signals
+                    else:
+                        signals_prev_layer = input_signals_tmp
+                        dim_hidden_layer = self.dims_hidden_layers[layer-1]
+                        input_signals_tmp = [[0] * dim_hidden_layer for j in range(min_batch_size)]
+
+                        for i, signal_prev_layer in enumerate(signals_prev_layer):
+                            input_signals_tmp[i] = self.sigmoid_layers[layer-1].output_binomial(signal_prev_layer, rand_obj)
+
+
 
 if __name__ == '__main__':
 
@@ -232,6 +251,18 @@ if __name__ == '__main__':
     # construct DBN
     print 'Building the model...'
     classifier = DeepBeliefNets(CNT_INPUT_DATA, DIMS_HIDDEN_LAYERS, CNT_OUTPUT_DATA, rand_obj)
+    print 'done.'
+
+    # pre-training the model
+    print 'Pre-training the model...'
+    classifier.pretrain(CNT_MIN_BATCH_TRAIN, MIN_BATCH_SIZE, CNT_MIN_BATCH_TRAIN, PRETRAIN_EPOCHS,
+                        PRETRAIN_LEARNING_RATE, CD_K_ITERATION)
+    # classifier.
+    print 'done.'
+
+    # fine-tuning the model
+    print 'Fine-Tuning the model...'
+    # classifier.
     print 'done.'
 
     # train
