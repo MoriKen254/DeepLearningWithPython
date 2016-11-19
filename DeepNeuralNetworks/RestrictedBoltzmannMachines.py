@@ -73,16 +73,16 @@ class RestrictedBoltzmannMachines:
         for n, input_signal in enumerate(input_signals):
 
             # hidden parameters for positive phase
-            means_prob_hid_pos = [0] * self.dim_hidden   # mean of p( h_j | v^(k) ) for positive phase
-            samples_hid_pos = [0] * self.dim_hidden      # h_j^(k) ~ p( h_j | v^(k) ) for positive phase
+            means_prob_hid_pos = [0] * self.dim_hidden   # mean of p( h_j | v^(k) ) for positive phase. 0.0 ~ 1.0
+            samples_hid_pos = [0] * self.dim_hidden      # h_j^(k) ~ p( h_j | v^(k) ) for positive phase. 0 or 1
 
             # visible parameters for negative phase
-            means_prob_vis_neg = [0] * self.dim_visible  # mean of p( v_i | h^(k) ) for negative phase
-            samples_vis_neg = [0] * self.dim_visible     # v_i^(k+1) # of p( v_i | h^(k) ) for negative phase
+            means_prob_vis_neg = [0] * self.dim_visible  # mean of p( v_i | h^(k) ) for negative phase. 0.0 ~ 1.0
+            samples_vis_neg = [0] * self.dim_visible     # v_i^(k+1) # of p( v_i | h^(k) ) for negative phase. 0 or 1
 
             # hidden parameters for negative phase
-            means_prob_hid_neg = [0] * self.dim_hidden   # mean of p( h_j | v^(k+1) ) for positive phase
-            samples_hid_neg = [0] * self.dim_hidden      # h_j^(k+1) ~ p( h_j | v^(k+1) ) for positive phase
+            means_prob_hid_neg = [0] * self.dim_hidden   # mean of p( h_j | v^(k+1) ) for positive phase. 0.0 ~ 1.0
+            samples_hid_neg = [0] * self.dim_hidden      # h_j^(k+1) ~ p( h_j | v^(k+1) ) for positive phase. 0 or 1
 
             # CD-k: CD-1 is enough for sampling (i.e. k=1)
             # h^(0) ~ p(h_j|v^(0))
@@ -125,7 +125,7 @@ class RestrictedBoltzmannMachines:
         self.sampleVisGivenHid(samples_hid_init, means_prob_vis_neg, samples_vis_neg) # h_j^(k)   ~ p(h_j|v^(k))
         self.sampleHidGivenVis(samples_vis_neg,  means_prob_hid_neg, samples_hid_neg) # v_i^(k+1) ~ p(v_i|h^(k))
 
-    def sampleHidGivenVis(self, samples_vis, mean_prob_vis, samples_hidden_output):
+    def sampleHidGivenVis(self, samples_vis, mean_prob_vis, samples_hid_output):
 
         for j, (weight, hid_bias) in enumerate(zip(self.weights, self.hidden_biases)):
             mean_prob_vis[j] = self.propup(samples_vis, weight, hid_bias)  # v^(k) of p(h_j|v^(k))
@@ -134,9 +134,9 @@ class RestrictedBoltzmannMachines:
 
     def sampleVisGivenHid(self, samples_hid, mean_prob_hid, samples_vis_output):
 
-        for j, (weight, vis_bias) in enumerate(zip(self.weights, self.hidden_biases)):
-            mean_prob_hid[j] = self.propup(samples_hid, weight, vis_bias)  # h^(k) of p(v_i|h^(k))
-            rand_gen = Binomial(1, mean_prob_hid[j])
+        for i, (weight, vis_bias) in enumerate(zip(self.weights, self.visible_biases)):
+            mean_prob_hid[i] = self.propdown(samples_hid, i, vis_bias)  # h^(k) of p(v_i|h^(k))
+            rand_gen = Binomial(1, mean_prob_hid[i])
             samples_vis_output = rand_gen.compute(self.rand_obj) # v_i^(k+1) ~ p(v_i|h^(k))
 
     def propup(self, samples_visible, weight, hidden_bias):
@@ -148,18 +148,37 @@ class RestrictedBoltzmannMachines:
 
         pre_activation += hidden_bias
 
-        activation = Sigmoid()
-        return activation.compute(pre_activation)
+        return Sigmoid().compute(pre_activation)
 
+    def propdown(self, samples_hidden, idx_hid, visible_bias):
 
-    def predict(self, input_signals):
-        # a_j = Sum{ w^T * x + b } ... (2.5.25)
-        # z_j = h(a_j) ... (2.5.26)
-        hidden_outputs = self.hidden_layer.output(input_signals)
-        # a = Sum{ w^T * x + b } where a if from sigma(a) = sigma(w^T * x + b) ... (2.5.9)
-        # y_k = exp(a_k) / Sum{ exp(a_k) } = exp(w_k^T * x + b_k) / Sum{ exp(w_k^T * x + b_k) } ... (2.5.18)
-        # convert to binary label [0 of 1]
-        return self.logisticLayer.predict(hidden_outputs)
+        pre_activation = 0.
+
+        for j, sample_hidden in enumerate(samples_hidden):
+            pre_activation += self.weights[j][idx_hid] * sample_hidden
+
+        pre_activation += visible_bias
+
+        return Sigmoid().compute(pre_activation)
+
+    def reconstruct(self, input_signals_vis):
+
+        reconstructs_vis = [0] * self.dim_visible
+        means_prob_hid = [0] * self.dim_hidden
+
+        for j, (weight, hid_bias) in enumerate(zip(self.weights, self.hidden_biases)):
+            means_prob_hid[j] = self.propup(input_signals_vis, weight, hid_bias)
+
+        for i, visible_bias in enumerate(self.visible_biases):
+            pre_activation = 0.0
+
+            for j, (weight, mean_prob_hid) in enumerate(zip(self.weights, means_prob_hid)):
+                pre_activation += weight[i] * mean_prob_hid
+
+            pre_activation += visible_bias
+            reconstructs_vis[i] = Sigmoid().compute(pre_activation)
+
+        return reconstructs_vis
 
 
 if __name__ == '__main__':
@@ -183,17 +202,13 @@ if __name__ == '__main__':
 
     # input data for training
     train_input_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TRAIN_DATA)]
-    # output data (label) for training
-    #train_teacher_labels = [0] * CNT_TRAIN_DATA
-
     # input data for test
     test_input_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TEST_DATA)]
-    # label for inputs
-    #test_teacher_labels = [0] * CNT_TEST_DATA
     # output data predicted by the model
     test_restricted_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TEST_DATA)]
+    reconstructed_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TEST_DATA)]
 
-    EPOCHS = 1000           # maximum training epochs
+    EPOCHS = 1           # maximum training epochs
     learning_rate = 0.2     # learning rate
 
     MIN_BATCH_SIZE = 10     # here, we do on-line training
@@ -314,10 +329,13 @@ if __name__ == '__main__':
     rbm = RestrictedBoltzmannMachines(DIM_VISIBLE, DIM_HIDDEN, None, None, None, rand_obj)
 
     # train
+    i = 0
     for epoch in range(EPOCHS):   # training epochs
         for (train_input_data_min_batch, train_teacher_data_min_batch) in \
                 zip(train_input_data_set_min_batch, train_teacher_data_set_min_batch):
             rbm.contrastiveDivergence(train_input_data_min_batch, MIN_BATCH_SIZE, learning_rate, 1)
+            print '%d' % i
+            i+=1
 
         learning_rate *= 0.995
 
@@ -326,40 +344,9 @@ if __name__ == '__main__':
 
     # test
     for i, test_input_data in enumerate(test_input_data_set):
-        test_predict_output_labels[i] = classifier.predict(test_input_data)
+        reconstructed_data_set[i] = rbm.reconstruct(test_input_data)
 
-    #
-    # Evaluate the model
-    #
-    confusion_matrix = [[0] * CNT_PATTERN for j in range(CNT_PATTERN)]
-    accuracy = 0.
-    precision = [0] * CNT_PATTERN
-    recall = [0] * CNT_PATTERN
-
-    for test_predict_output_label, test_teacher_labels in zip(test_predict_output_labels, test_teacher_labels):
-        predicted_idx = test_predict_output_label.index(1)
-        actual_idx = test_teacher_labels.index(1)
-
-        confusion_matrix[actual_idx][predicted_idx] += 1
-
-    for i in range(CNT_PATTERN):
-        col = 0.
-        row = 0.
-
-        for j in range(CNT_PATTERN):
-            if i == j:
-                accuracy += confusion_matrix[i][j]
-                precision[i] += confusion_matrix[j][i]
-                recall[i] += confusion_matrix[i][j]
-
-            col += confusion_matrix[j][i]
-            row += confusion_matrix[i][j]
-
-        precision[i] /= col
-        recall[i] /= row
-
-    accuracy /= CNT_TEST_DATA
-
+    # evvaluation
     print '--------------------'
     print 'MLP model evaluation'
     print '--------------------'
