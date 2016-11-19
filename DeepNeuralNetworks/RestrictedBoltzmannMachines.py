@@ -69,15 +69,6 @@ class RestrictedBoltzmannMachines:
         gradients_hidden_b = [0] * self.dim_hidden
         gradients_visible_b = [0] * self.dim_visible
 
-        # train with mibatches
-        for n in range(min_batch_size):
-
-        # nhSamples -> hidden_init_samples
-        # phSamples -> hidden_samples
-
-
-        y_err_arr = [[0] * self.dim_output_signal for i in range(min_batch_size)]
-
         # forward hidden layer
         for n in range(min_batch_size):
 
@@ -95,14 +86,20 @@ class RestrictedBoltzmannMachines:
 
             # CD-k: CD-1 is enough for sampling (i.e. k=1)
             # h^(0) ~ p(h_j|v^(0))
-            self.gibbsHiddenVisibleHidden(input_signals[n], means_prob_hidden_positive, samples_hidden_positive)
+            self.sampleHidGivenVis(input_signals[n], means_prob_hidden_positive, samples_hidden_positive)
 
             for step in range(cd_k_iteration):
 
                 # Gibbs sampling
                 if step == 0:
-                    self.gibbsHidVisHid()
+                    self.gibbsHidVisHid(samples_hidden_positive, means_prob_visible_negative,
+                                        samples_visible_negative, means_prob_hidden_negative, samples_hidden_negative)
+                else:
+                    self.gibbsHidVisHid(samples_hidden_negative, means_prob_visible_negative,
+                                        samples_visible_negative, means_prob_hidden_negative, samples_hidden_negative)
 
+
+            a = 0
 
             hidden_output[i] = self.hidden_layer.foward(input_signals[i])
 
@@ -116,6 +113,7 @@ class RestrictedBoltzmannMachines:
 
     def gibbsHidVisHid(self, samples_hid_init, means_prob_vis_neg, samples_vis_neg,
                                                means_prob_hid_neg, samples_hid_neg):
+
         self.sampleVisGivenHid(samples_hid_init, means_prob_vis_neg, samples_vis_neg) # h_j^(k)   ~ p(h_j|v^(k))
         self.sampleHidGivenVis(samples_vis_neg,  means_prob_hid_neg, samples_hid_neg) # v_i^(k+1) ~ p(v_i|h^(k))
 
@@ -123,21 +121,21 @@ class RestrictedBoltzmannMachines:
 
         for j, (weight, hid_bias) in enumerate(zip(self.weights, self.hidden_biases)):
             mean_prob_vis[j] = self.propup(samples_vis, weight, hid_bias)  # v^(k) of p(h_j|v^(k))
-            rand_gen = Binomial(1, mean_prob_vis[i])
+            rand_gen = Binomial(1, mean_prob_vis[j])
             samples_hid_output = rand_gen.compute(self.rand_obj) # h_j^(k) ~ p(h_j|v^(k))
 
     def sampleVisGivenHid(self, samples_hid, mean_prob_hid, samples_vis_output):
 
-        for j, (weight, vis_bias) in enumerate(zip(self.weights, self.vis_biases)):
+        for j, (weight, vis_bias) in enumerate(zip(self.weights, self.hidden_biases)):
             mean_prob_hid[j] = self.propup(samples_hid, weight, vis_bias)  # h^(k) of p(v_i|h^(k))
-            rand_gen = Binomial(1, mean_prob_hid[i])
+            rand_gen = Binomial(1, mean_prob_hid[j])
             samples_vis_output = rand_gen.compute(self.rand_obj) # v_i^(k+1) ~ p(v_i|h^(k))
 
-    def propup(self, samples_visible_given, weight, hidden_bias):
+    def propup(self, samples_visible, weight, hidden_bias):
 
         pre_activation = 0.
 
-        for i, (weight_elem, sample_visible) in enumerate(zip(samples_visible_given, weight)):
+        for i, (weight_elem, sample_visible) in enumerate(zip(weight, samples_visible)):
             pre_activation += weight_elem * sample_visible
 
         pre_activation += hidden_bias
