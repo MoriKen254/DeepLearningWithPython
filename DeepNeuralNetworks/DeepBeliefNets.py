@@ -10,6 +10,7 @@ See LICENSE file included in this repository.
 import csv
 import sys
 import random
+import copy
 
 from RestrictedBoltzmannMachines import RestrictedBoltzmannMachines
 sys.path.append('../SingleLayerNeuralNetworks')
@@ -62,6 +63,7 @@ class DeepBeliefNets:
     def pretrain(self, input_signals_arr, min_batch_size, cnt_min_batch, epochs, learning_rate, cd_k_iter):
         for layer in range(self.cnt_layers):
             for epoch in range(epochs):
+                print 'epoch ' + str(epoch)
                 for input_signals in input_signals_arr:
 
                     input_signals_tmp = [[0] * self.dim_input_signal for j in range(min_batch_size)]
@@ -78,6 +80,48 @@ class DeepBeliefNets:
                             input_signals_tmp[i] = self.sigmoid_layers[layer-1].output_binomial(signal_prev_layer, rand_obj)
 
                     self.rbm_layers[layer].contrastiveDivergence(input_signals_tmp, min_batch_size, learning_rate, cd_k_iter)
+
+    def finetune(self, input_signals_arr, input_teachers, cnt_min_batch, learning_rate):
+        layer_inputs = [0] * (self.cnt_layers + 1)
+        layer_inputs[0] = input_signals_arr
+        
+        for layer, dim_hidden_layer in enumerate(self.dims_hidden_layers):
+
+            inputs_layer = []
+            hiddens_arr_tmp = [[0] * dim_hidden_layer for j in range(cnt_min_batch)]
+
+            for n, (input_signals, hiddens) in enumerate(zip(input_signals_arr, hiddens_arr_tmp)):
+                if layer == 0:
+                    inputs_layer = input_signals
+                else:
+                    inputs_layer = hiddens
+
+                hiddens_arr_tmp[n] = self.sigmoid_layers[layer].forward(inputs_layer)
+
+            hiddens_arr = hiddens_arr_tmp
+            #layer_inputs.append(copy.deepcopy(hiddens_arr))
+            layer_inputs[layer+1] = copy.deepcopy(hiddens_arr)
+
+        # forward & backward output layer
+        grad_output = self.logistic_layer.train(hiddens_arr, input_teachers, cnt_min_batch, learning_rate)
+
+        # backward hidden layers
+        grad_hidden = [[0] for j in range(1)]
+        for layer in reversed(range(self.cnt_layers)):
+
+            if layer == self.cnt_layers - 1:
+                weights_prev = self.logistic_layer.weights
+            else:
+                weights_prev = self.sigmoid_layers[layer+1].weights
+                grad_output = copy.deepcopy(grad_hidden)
+
+            grad_hidden = self.sigmoid_layers[layer].backward(layer_inputs[layer], layer_inputs[layer+1],
+                                                              grad_output, weights_prev,
+                                                              cnt_min_batch, learning_rate)
+
+
+            
+
 
 
 
@@ -113,9 +157,9 @@ if __name__ == '__main__':
     # output data predicted by the model
     predicted_teacher_data_set = [[0] * CNT_OUTPUT_DATA for j in range(CNT_TEST_DATA)]
 
-    PRETRAIN_EPOCHS = 1000          # maximum pre-training epochs
+    PRETRAIN_EPOCHS = 2#00          # maximum pre-training epochs
     PRETRAIN_LEARNING_RATE = 0.2    # learning rate for  pre-training
-    FINETUNE_EPOCHS = 1000          # maximum fine-tune epochs
+    FINETUNE_EPOCHS = 2#1000          # maximum fine-tune epochs
     FINETUNE_LEARNING_RATE = 0.15   # learning rate for  fine-tune
 
     MIN_BATCH_SIZE = 50
@@ -200,9 +244,9 @@ if __name__ == '__main__':
                     is_visible_idx_in_curr_part = input_idx >= CNT_INPUT_EACH * pattern_idx and \
                                                   input_idx <  CNT_INPUT_EACH * (pattern_idx + 1)
                     if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
-                        valid_input_data_set[train_data_idx][input_idx] = binomial_train_true.compute(rand_obj)
+                        valid_input_data_set[valid_data_idx][input_idx] = binomial_train_true.compute(rand_obj)
                     else:
-                        valid_input_data_set[train_data_idx][input_idx] = binomial_train_false.compute(rand_obj)
+                        valid_input_data_set[valid_data_idx][input_idx] = binomial_train_false.compute(rand_obj)
 
                 for output_idx in range(CNT_OUTPUT_DATA):
                     if output_idx == pattern_idx:
@@ -264,8 +308,16 @@ if __name__ == '__main__':
 
     # fine-tuning the model
     print 'Fine-Tuning the model...'
+    for epoch in range(FINETUNE_EPOCHS):
+#        for valid_input_data_min_batch in enumerate(valid_input_data_set_min_batch):
+        for batch in range(CNT_MIN_BATCH_VALID):
+            classifier.finetune(valid_input_data_set_min_batch[batch], valid_teacher_data_set_min_batch[batch],
+                                CNT_MIN_BATCH_VALID, FINETUNE_LEARNING_RATE)
+        FINETUNE_LEARNING_RATE *= 0.98
     # classifier.
     print 'done.'
+
+
 
     # train
     for epoch in range(EPOCHS):   # training epochs
@@ -276,7 +328,7 @@ if __name__ == '__main__':
         learning_rate *= 0.995
 
         print 'epoch = %.lf' % epoch
-        #if epoch%10 == 0:
+        #if epoch%10 == 0::w
         #    print 'epoch = %.lf' % epoch
 
     # test

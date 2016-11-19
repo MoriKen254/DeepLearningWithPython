@@ -129,3 +129,6 @@ class HiddenLayer:
             output_val[j] = binomial.compute(rand_obj)
 
         return output_val
+
+    def forward(self, input_signals):
+        return self.output(input_signals)
