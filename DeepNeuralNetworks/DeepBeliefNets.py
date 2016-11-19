@@ -119,6 +119,20 @@ class DeepBeliefNets:
                                                               grad_output, weights_prev,
                                                               cnt_min_batch, learning_rate)
 
+    def predict(self, input_signals):
+        hiddens = []
+
+        for layer, sigmoid_layeer in enumerate(self.sigmoid_layers):
+            layer_inputs = []
+
+            if layer == 0:
+                layer_inputs = input_signals
+            else:
+                layer_inputs = copy.deepcopy(hiddens)
+
+            hiddens = sigmoid_layeer.forward(layer_inputs)
+
+        return self.logistic_layer.predict(hiddens)
 
             
 
@@ -317,23 +331,9 @@ if __name__ == '__main__':
     # classifier.
     print 'done.'
 
-
-
-    # train
-    for epoch in range(EPOCHS):   # training epochs
-        for (train_input_data_min_batch, train_teacher_data_min_batch) in \
-                zip(train_input_data_set_min_batch, train_teacher_data_set_min_batch):
-            rbm.contrastiveDivergence(train_input_data_min_batch, MIN_BATCH_SIZE, learning_rate, 1)
-
-        learning_rate *= 0.995
-
-        print 'epoch = %.lf' % epoch
-        #if epoch%10 == 0::w
-        #    print 'epoch = %.lf' % epoch
-
     # test
     for i, test_input_data in enumerate(test_input_data_set):
-        reconstructed_data_set[i] = rbm.reconstruct(test_input_data)
+        predicted_teacher_data_set[i] = classifier.predict(test_input_data)
 
     # evvaluation
     print '-----------------------------------'
