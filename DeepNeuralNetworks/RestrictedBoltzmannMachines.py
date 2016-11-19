@@ -208,7 +208,7 @@ if __name__ == '__main__':
     test_restricted_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TEST_DATA)]
     reconstructed_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TEST_DATA)]
 
-    EPOCHS = 1           # maximum training epochs
+    EPOCHS = 1#000           # maximum training epochs
     learning_rate = 0.2     # learning rate
 
     MIN_BATCH_SIZE = 10     # here, we do on-line training
@@ -329,33 +329,38 @@ if __name__ == '__main__':
     rbm = RestrictedBoltzmannMachines(DIM_VISIBLE, DIM_HIDDEN, None, None, None, rand_obj)
 
     # train
-    i = 0
     for epoch in range(EPOCHS):   # training epochs
         for (train_input_data_min_batch, train_teacher_data_min_batch) in \
                 zip(train_input_data_set_min_batch, train_teacher_data_set_min_batch):
             rbm.contrastiveDivergence(train_input_data_min_batch, MIN_BATCH_SIZE, learning_rate, 1)
-            print '%d' % i
-            i+=1
 
         learning_rate *= 0.995
 
-        if epoch%10 == 0:
-            print 'epoch = %.lf' % epoch
+        print 'epoch = %.lf' % epoch
+        #if epoch%10 == 0:
+        #    print 'epoch = %.lf' % epoch
 
     # test
     for i, test_input_data in enumerate(test_input_data_set):
         reconstructed_data_set[i] = rbm.reconstruct(test_input_data)
 
     # evvaluation
-    print '--------------------'
-    print 'MLP model evaluation'
-    print '--------------------'
-    print 'Accuracy:  %.1f %%' % (accuracy * 100)
-    print 'Precision:'
-    for i, precision_elem in enumerate(precision):
-        print 'class %d: %.1f %%' % (i+1, precision_elem * 100)
-    print 'Recall:'
-    for i, recall_elem in enumerate(recall):
-        print 'class %d: %.1f %%' % (i+1, recall_elem * 100)
+    print '-----------------------------------'
+    print 'RBM model reconstruction \n evaluation'
+    print '-----------------------------------'
 
+    for pattern in range(CNT_PATTERN):
+        print_str = 'Class%d\n' % (pattern + 1)
+        for n in range(CNT_TEST_DATA_EACH):
+            idx = pattern * CNT_TEST_DATA_EACH + n
+
+            print_str +=  '['
+            for i in range(DIM_VISIBLE - 1):
+                print_str +=  '%d, ' % test_input_data_set[idx][i]
+            print_str +=  '%d] -> [' % test_input_data_set[idx][i]
+
+            for i in range(DIM_VISIBLE - 1):
+                print_str += '%.5f, ' % reconstructed_data_set[idx][i]
+            print_str += '%.5f,]\n' % reconstructed_data_set[idx][i]
+            print print_str
 
