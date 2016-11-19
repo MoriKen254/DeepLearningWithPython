@@ -24,7 +24,7 @@ from RandomGenerator import Uniform, Binomial
 
 class RestrictedBoltzmannMachines:
     u"""
-    Class for MutliLayerPerceptrons
+    Class for RestrictedBoltzmannMachines
     """
 
     def __init__(self, dim_visible, dim_hidden, weights, hidden_biases, visible_biases, rand_obj, use_csv=False):
