@@ -70,38 +70,49 @@ class RestrictedBoltzmannMachines:
         gradients_visible_b = [0] * self.dim_visible
 
         # forward hidden layer
-        for n in range(min_batch_size):
+        for n, input_signal in enumerate(input_signals):
 
             # hidden parameters for positive phase
-            means_prob_hidden_positive = [0] * self.dim_hidden   # mean of p( h_j | v^(k) ) for positive phase
-            samples_hidden_positive = [0] * self.dim_hidden      # h_j^(k) ~ p( h_j | v^(k) ) for positive phase
+            means_prob_hid_pos = [0] * self.dim_hidden   # mean of p( h_j | v^(k) ) for positive phase
+            samples_hid_pos = [0] * self.dim_hidden      # h_j^(k) ~ p( h_j | v^(k) ) for positive phase
 
             # visible parameters for negative phase
-            means_prob_visible_negative = [0] * self.dim_visible # mean of p( v_i | h^(k) ) for negative phase
-            samples_visible_negative = [0] * self.dim_visible    # v_i^(k+1) # of p( v_i | h^(k) ) for negative phase
+            means_prob_vis_neg = [0] * self.dim_visible  # mean of p( v_i | h^(k) ) for negative phase
+            samples_vis_neg = [0] * self.dim_visible     # v_i^(k+1) # of p( v_i | h^(k) ) for negative phase
 
             # hidden parameters for negative phase
-            means_prob_hidden_negative = [0] * self.dim_hidden   # mean of p( h_j | v^(k+1) ) for positive phase
-            samples_hidden_negative = [0] * self.dim_hidden      # h_j^(k+1) ~ p( h_j | v^(k+1) ) for positive phase
+            means_prob_hid_neg = [0] * self.dim_hidden   # mean of p( h_j | v^(k+1) ) for positive phase
+            samples_hid_neg = [0] * self.dim_hidden      # h_j^(k+1) ~ p( h_j | v^(k+1) ) for positive phase
 
             # CD-k: CD-1 is enough for sampling (i.e. k=1)
             # h^(0) ~ p(h_j|v^(0))
-            self.sampleHidGivenVis(input_signals[n], means_prob_hidden_positive, samples_hidden_positive)
+            self.sampleHidGivenVis(input_signal, means_prob_hid_pos, samples_hid_pos)
 
             for step in range(cd_k_iteration):
 
                 # Gibbs sampling
                 if step == 0:
-                    self.gibbsHidVisHid(samples_hidden_positive, means_prob_visible_negative,
-                                        samples_visible_negative, means_prob_hidden_negative, samples_hidden_negative)
+                    self.gibbsHidVisHid(samples_hid_pos, means_prob_vis_neg,
+                                        samples_vis_neg, means_prob_hid_neg, samples_hid_neg)
                 else:
-                    self.gibbsHidVisHid(samples_hidden_negative, means_prob_visible_negative,
-                                        samples_visible_negative, means_prob_hidden_negative, samples_hidden_negative)
+                    self.gibbsHidVisHid(samples_hid_neg, means_prob_vis_neg,
+                                        samples_vis_neg, means_prob_hid_neg, samples_hid_neg)
 
+            # calculate gradients
+            for j, (mean_prob_hid_pos, mean_prob_hid_neg) in enumerate(zip(means_prob_hid_pos, means_prob_hid_neg)):
+                for i, (input_elem, sample_vis_neg) in enumerate(zip(input_signal, samples_vis_neg)):
+                    gradients_w[j][i] += mean_prob_hid_pos * input_elem - mean_prob_hid_neg * sample_vis_neg
 
-            a = 0
+                gradients_hidden_b[j] += mean_prob_hid_pos - mean_prob_hid_neg
 
-            hidden_output[i] = self.hidden_layer.foward(input_signals[i])
+            for i, (input_elem, sample_vis_neg) in enumerate(zip(input_signal, samples_vis_neg)):
+                gradients_visible_b[j][i] += input_elem - sample_vis_neg
+
+        # update params
+
+        a = 0
+
+        hidden_output[i] = self.hidden_layer.foward(input_signals[i])
 
         # forward & backward output layer
         # delta = y - t ... (2.5.32)
