@@ -28,6 +28,7 @@ class RestrictedBoltzmannMachines:
     """
 
     def __init__(self, dim_visible, dim_hidden, weights, hidden_biases, visible_biases, rand_obj, use_csv=False):
+        self.use_csv = use_csv
 
         if rand_obj is None:
             rand_obj = random(1234)
@@ -36,12 +37,26 @@ class RestrictedBoltzmannMachines:
 
         if weights is None:
             weights_tmp = [[0] * dim_visible for j in range(dim_hidden)]
-            w = 1. / dim_visible
-            random_generator = Uniform(-w, w)
 
-            for j in range(dim_hidden):
-                for i in range(dim_visible):
-                    weights_tmp[j][i] = random_generator.compute(rand_obj)
+            if self.use_csv:
+                file_dir = '../data/DeepNeuralNetworks/RestrictedBoltzmannMachines/'
+                # create training data
+                f = open(file_dir  + 'weights_init.csv', 'r')
+                reader = csv.reader(f)
+                for j in range(dim_hidden):
+                    weight_tmp = reader.next()
+                    for i in range(dim_visible):
+                        weights_tmp[j][i] = float(weight_tmp[i])
+
+            else:
+                w = 1. / dim_visible
+                random_generator = Uniform(-w, w)
+
+                for j in range(dim_hidden):
+                    for i in range(dim_visible):
+                        weights_tmp[j][i] = random_generator.compute(rand_obj)
+
+
         else:
             weights_tmp = weights
 
@@ -130,20 +145,20 @@ class RestrictedBoltzmannMachines:
         for j, (weight, hid_bias) in enumerate(zip(self.weights, self.hidden_biases)):
             mean_prob_vis[j] = self.propup(samples_vis, weight, hid_bias)  # v^(k) of p(h_j|v^(k))
             rand_gen = Binomial(1, mean_prob_vis[j])
-            samples_hid_output = rand_gen.compute(self.rand_obj) # h_j^(k) ~ p(h_j|v^(k))
+            samples_hid_output[j] = rand_gen.compute(self.rand_obj) # h_j^(k) ~ p(h_j|v^(k))
 
     def sampleVisGivenHid(self, samples_hid, mean_prob_hid, samples_vis_output):
 
-        for i, (weight, vis_bias) in enumerate(zip(self.weights, self.visible_biases)):
+        for i, vis_bias in enumerate(self.visible_biases):
             mean_prob_hid[i] = self.propdown(samples_hid, i, vis_bias)  # h^(k) of p(v_i|h^(k))
             rand_gen = Binomial(1, mean_prob_hid[i])
-            samples_vis_output = rand_gen.compute(self.rand_obj) # v_i^(k+1) ~ p(v_i|h^(k))
+            samples_vis_output[i] = rand_gen.compute(self.rand_obj) # v_i^(k+1) ~ p(v_i|h^(k))
 
     def propup(self, samples_visible, weight, hidden_bias):
 
         pre_activation = 0.
 
-        for i, (weight_elem, sample_visible) in enumerate(zip(weight, samples_visible)):
+        for weight_elem, sample_visible in zip(weight, samples_visible):
             pre_activation += weight_elem * sample_visible
 
         pre_activation += hidden_bias
@@ -197,9 +212,6 @@ if __name__ == '__main__':
     DIM_VISIBLE         = CNT_VISIBLE_EACH * CNT_PATTERN    # number of test data
     DIM_HIDDEN          = 6             # dimensions of hidden
 
-    # DIM_INPUT_SIGNAL    = 2             # dimensions of input data
-    # DIM_OUTPUT_SIGNAL   = CNT_PATTERN   # dimensions of output data
-
     # input data for training
     train_input_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TRAIN_DATA)]
     # input data for test
@@ -208,7 +220,7 @@ if __name__ == '__main__':
     test_restricted_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TEST_DATA)]
     reconstructed_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TEST_DATA)]
 
-    EPOCHS = 1#000           # maximum training epochs
+    EPOCHS = 1000           # maximum training epochs
     learning_rate = 0.2     # learning rate
 
     MIN_BATCH_SIZE = 10     # here, we do on-line training
@@ -298,10 +310,10 @@ if __name__ == '__main__':
                                                   test_data_idx <  CNT_TEST_DATA_EACH * (pattern_idx + 1)
                     is_visible_idx_in_curr_part = visible_idx   >= CNT_VISIBLE_EACH   * pattern_idx and \
                                                   visible_idx   <  CNT_VISIBLE_EACH   * (pattern_idx + 1)
-                if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
-                    test_input_data_set[test_data_idx][visible_idx] = binomial_test_true.compute(rand_obj)
-                else:
-                    test_input_data_set[test_data_idx][visible_idx] = binomial_test_false.compute(rand_obj)
+                    if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
+                        test_input_data_set[test_data_idx][visible_idx] = binomial_test_true.compute(rand_obj)
+                    else:
+                        test_input_data_set[test_data_idx][visible_idx] = binomial_test_false.compute(rand_obj)
 
 
     if use_csv:
@@ -326,7 +338,7 @@ if __name__ == '__main__':
     #
 
     # construct
-    rbm = RestrictedBoltzmannMachines(DIM_VISIBLE, DIM_HIDDEN, None, None, None, rand_obj)
+    rbm = RestrictedBoltzmannMachines(DIM_VISIBLE, DIM_HIDDEN, None, None, None, rand_obj, use_csv)
 
     # train
     for epoch in range(EPOCHS):   # training epochs
@@ -346,12 +358,14 @@ if __name__ == '__main__':
 
     # evvaluation
     print '-----------------------------------'
-    print 'RBM model reconstruction \n evaluation'
+    print 'RBM model reconstruction evaluation'
     print '-----------------------------------'
 
     for pattern in range(CNT_PATTERN):
-        print_str = 'Class%d\n' % (pattern + 1)
+        print '\n'
+        print 'Class%d' % (pattern + 1)
         for n in range(CNT_TEST_DATA_EACH):
+            print_str = ''
             idx = pattern * CNT_TEST_DATA_EACH + n
 
             print_str +=  '['
@@ -361,6 +375,6 @@ if __name__ == '__main__':
 
             for i in range(DIM_VISIBLE - 1):
                 print_str += '%.5f, ' % reconstructed_data_set[idx][i]
-            print_str += '%.5f,]\n' % reconstructed_data_set[idx][i]
+            print_str += '%.5f]' % reconstructed_data_set[idx][i]
             print print_str
 
