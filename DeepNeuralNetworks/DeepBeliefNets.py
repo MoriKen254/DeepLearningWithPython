@@ -142,8 +142,8 @@ class DeepBeliefNets:
 if __name__ == '__main__':
 
     CNT_TRAIN_DATA_EACH = 200           # for demo
-    CNT_VALID_DATA_EACH = 200      # for demo
-    CNT_TEST_DATA_EACH  = 2             # for demo
+    CNT_VALID_DATA_EACH = 200           # for demo
+    CNT_TEST_DATA_EACH  = 50            # for demo
     CNT_INPUT_EACH      = 20            # for demo
     PROB_NOISE_TRAIN    = 0.2           # for demo
     PROB_NOISE_TEST     = 0.25          # for demo
@@ -164,16 +164,16 @@ if __name__ == '__main__':
 
     # input data for validation
     valid_input_data_set = [[0] * CNT_INPUT_DATA for j in range(CNT_VALID_DATA)]
-    valid_teacher_data_set = [[0] * CNT_OUTPUT_DATA for j in range(CNT_VALID_DATA)]
+    valid_teacher_labels = [[0] * CNT_OUTPUT_DATA for j in range(CNT_VALID_DATA)]
 
     test_input_data_set = [[0] * CNT_INPUT_DATA for j in range(CNT_TEST_DATA)]
-    test_teacher_data_set = [[0] * CNT_OUTPUT_DATA for j in range(CNT_TEST_DATA)]
+    test_teacher_labels = [[0] * CNT_OUTPUT_DATA for j in range(CNT_TEST_DATA)]
     # output data predicted by the model
-    predicted_teacher_data_set = [[0] * CNT_OUTPUT_DATA for j in range(CNT_TEST_DATA)]
+    test_predict_output_labels = [[0] * CNT_OUTPUT_DATA for j in range(CNT_TEST_DATA)]
 
-    PRETRAIN_EPOCHS = 2#00          # maximum pre-training epochs
+    PRETRAIN_EPOCHS = 1          # maximum pre-training epochs
     PRETRAIN_LEARNING_RATE = 0.2    # learning rate for  pre-training
-    FINETUNE_EPOCHS = 2#1000          # maximum fine-tune epochs
+    FINETUNE_EPOCHS = 1          # maximum fine-tune epochs
     FINETUNE_LEARNING_RATE = 0.15   # learning rate for  fine-tune
 
     MIN_BATCH_SIZE = 50
@@ -203,27 +203,53 @@ if __name__ == '__main__':
             use_csv = True
 
     if use_csv:
-        file_dir = '../data/DeepNeuralNetworks/RestrictedBoltzmannMachines/'
+        file_dir = '../data/DeepNeuralNetworks/DeepBeliefNets/'
         for pattern_idx in range(CNT_PATTERN):  # train for each pattern. pattern_idx < 3
 
             # create training data
-            f = open(file_dir  + 'train' + str(pattern_idx + 1) + '.csv', 'r')
+            f = open(file_dir  + 'train_data' + str(pattern_idx + 1) + '.csv', 'r')
             reader = csv.reader(f)
             for n in range(CNT_TRAIN_DATA_EACH): # train for the number of data set for each pattern. n < 200
                 train_data_idx = pattern_idx * CNT_TRAIN_DATA_EACH + n
                 data = reader.next()
-                for input_idx in range(DIM_VISIBLE): # visible_idx < 4
+                for input_idx in range(CNT_INPUT_DATA): # visible_idx < 4
                     train_input_data_set[train_data_idx][input_idx] = float(data[input_idx])
             f.close()
 
+            # create validation data
+            f1 = open(file_dir  + 'valid_data' + str(pattern_idx + 1) + '.csv', 'r')
+            f2 = open(file_dir  + 'valid_label' + str(pattern_idx + 1) + '.csv', 'r')
+            reader1 = csv.reader(f1)
+            reader2 = csv.reader(f2)
+            for n in range(CNT_VALID_DATA_EACH): # train for the number of data set for each pattern. n < 200
+                valid_data_idx = pattern_idx * CNT_VALID_DATA_EACH + n
+
+                data = reader1.next()
+                for input_idx in range(CNT_INPUT_DATA): # visible_idx < 4
+                    valid_input_data_set[valid_data_idx][input_idx] = float(data[input_idx])
+
+                label = reader2.next()
+                for output_idx in range(CNT_OUTPUT_DATA):
+                    valid_teacher_labels[valid_data_idx][output_idx] = float(label[output_idx])
+
+            f1.close()
+            f2.close()
+
             # create test data
-            f = open(file_dir  + 'test' + str(pattern_idx + 1) + '.csv', 'r')
-            reader = csv.reader(f)
+            f1 = open(file_dir  + 'test_data' + str(pattern_idx + 1) + '.csv', 'r')
+            f2 = open(file_dir  + 'test_label' + str(pattern_idx + 1) + '.csv', 'r')
+            reader1 = csv.reader(f1)
+            reader2 = csv.reader(f2)
             for n in range(CNT_TEST_DATA_EACH): # train for the number of data set for each pattern. n < 200
                 test_data_idx = pattern_idx * CNT_TEST_DATA_EACH + n
-                data = reader.next()
-                for input_idx in range(DIM_VISIBLE): # visible_idx < 4
+
+                data = reader1.next()
+                for input_idx in range(CNT_INPUT_DATA): # visible_idx < 4
                     test_input_data_set[test_data_idx][input_idx] = float(data[input_idx])
+
+                label = reader2.next()
+                for input_idx in range(CNT_OUTPUT_DATA): # visible_idx < 4
+                    test_teacher_labels[test_data_idx][input_idx] = float(label[input_idx])
             f.close()
 
     else:
@@ -264,9 +290,9 @@ if __name__ == '__main__':
 
                 for output_idx in range(CNT_OUTPUT_DATA):
                     if output_idx == pattern_idx:
-                        valid_teacher_data_set[valid_data_idx][output_idx] = 1
+                        valid_teacher_labels[valid_data_idx][output_idx] = 1
                     else:
-                        valid_teacher_data_set[valid_data_idx][output_idx] = 0
+                        valid_teacher_labels[valid_data_idx][output_idx] = 0
 
             # create test data
             for n in range(CNT_TEST_DATA_EACH): # train for the number of data set for each pattern. n < 200
@@ -282,16 +308,29 @@ if __name__ == '__main__':
                     else:
                         test_input_data_set[test_data_idx][input_idx] = binomial_test_false.compute(rand_obj)
 
+                for i in range(CNT_OUTPUT_DATA):
+                    if i == pattern_idx:
+                        test_teacher_labels[test_data_idx][i] = 1
+                    else:
+                        test_teacher_labels[test_data_idx][i] = 0
+
 
     if use_csv:
         print 'Read random data set from csv file.'
-        f = open('../data/DeepNeuralNetworks/RestrictedBoltzmannMachines/random_index.csv', 'r')
-        reader = csv.reader(f)
+        f1 = open('../data/DeepNeuralNetworks/DeepBeliefNets/random_index_train.csv', 'r')
+        f2 = open('../data/DeepNeuralNetworks/DeepBeliefNets/random_index_valid.csv', 'r')
+        reader1 = csv.reader(f1)
+        reader2 = csv.reader(f2)
         for j in range(MIN_BATCH_SIZE):
             for i in range(CNT_MIN_BATCH_TRAIN):
-                idx = int(float(reader.next()[0]))
-                train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
-        f.close()
+                idx_train = int(float(reader1.next()[0]))
+                train_input_data_set_min_batch[i][j] = train_input_data_set[idx_train]
+            for i in range(CNT_MIN_BATCH_VALID):
+                idx_valid = int(float(reader2.next()[0]))
+                valid_input_data_set_min_batch[i][j] = valid_input_data_set[idx_valid]
+                valid_teacher_data_set_min_batch[i][j] = valid_teacher_labels[idx_valid]
+        f1.close()
+        f2.close()
 
     else:
         # create minbatches with training data
@@ -302,7 +341,7 @@ if __name__ == '__main__':
             for i in range(CNT_MIN_BATCH_VALID):
                 idx = min_batch_indexes[i * MIN_BATCH_SIZE + j]
                 valid_input_data_set_min_batch[i][j] = valid_input_data_set[idx]
-                valid_teacher_data_set_min_batch[i][j] = valid_teacher_data_set[idx]
+                valid_teacher_data_set_min_batch[i][j] = valid_teacher_labels[idx]
 
     #
     # Build Deep Belief Nets model
@@ -333,26 +372,48 @@ if __name__ == '__main__':
 
     # test
     for i, test_input_data in enumerate(test_input_data_set):
-        predicted_teacher_data_set[i] = classifier.predict(test_input_data)
+        test_predict_output_labels[i] = classifier.predict(test_input_data)
 
-    # evvaluation
-    print '-----------------------------------'
-    print 'RBM model reconstruction evaluation'
-    print '-----------------------------------'
+    #
+    # Evaluate the model
+    #
+    confusion_matrix = [[0] * CNT_PATTERN for j in range(CNT_PATTERN)]
+    accuracy = 0.
+    precision = [0] * CNT_PATTERN
+    recall = [0] * CNT_PATTERN
 
-    for pattern in range(CNT_PATTERN):
-        print '\n'
-        print 'Class%d' % (pattern + 1)
-        for n in range(CNT_TEST_DATA_EACH):
-            print_str = ''
-            idx = pattern * CNT_TEST_DATA_EACH + n
+    for test_predict_output_label, test_teacher_label in zip(test_predict_output_labels, test_teacher_labels):
+        predicted_idx = test_predict_output_label.index(1)
+        actual_idx = test_teacher_label.index(1)
 
-            print_str +=  '['
-            for i in range(DIM_VISIBLE - 1):
-                print_str +=  '%d, ' % test_input_data_set[idx][i]
-            print_str +=  '%d] -> [' % test_input_data_set[idx][i]
+        confusion_matrix[actual_idx][predicted_idx] += 1
 
-            for i in range(DIM_VISIBLE - 1):
-                print_str += '%.5f, ' % reconstructed_data_set[idx][i]
-            print_str += '%.5f]' % reconstructed_data_set[idx][i]
-            print print_str
+    for i in range(CNT_PATTERN):
+        col = 0.
+        row = 0.
+
+        for j in range(CNT_PATTERN):
+            if i == j:
+                accuracy += confusion_matrix[i][j]
+                precision[i] += confusion_matrix[j][i]
+                recall[i] += confusion_matrix[i][j]
+
+            col += confusion_matrix[j][i]
+            row += confusion_matrix[i][j]
+
+        precision[i] /= col
+        recall[i] /= row
+
+    accuracy /= CNT_TEST_DATA
+
+    print '-------------------------------'
+    print 'DBN Regression model evaluation'
+    print '-------------------------------'
+    print 'Accuracy:  %.1f %%' % (accuracy * 100)
+    print 'Precision:'
+    for i, precision_elem in enumerate(precision):
+        print 'class %d: %.1f %%' % (i+1, precision_elem * 100)
+    print 'Recall:'
+    for i, recall_elem in enumerate(recall):
+        print 'class %d: %.1f %%' % (i+1, recall_elem * 100)
+

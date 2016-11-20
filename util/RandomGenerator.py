@@ -37,7 +37,9 @@ class Uniform(RandomGenerator):
             self.max_val = max_val
 
     def compute(self, rand_obj):
-        return rand_obj.random() * (self.max_val - self.min_val) + self.min_val
+        r = rand_obj.random()
+        r = 0.5
+        return r * (self.max_val - self.min_val) + self.min_val
 
 
 class Binomial(RandomGenerator):
@@ -63,7 +65,7 @@ class Binomial(RandomGenerator):
         cnt_val = 0
         for i in range(self.num_binary):
             rand_val = rand_obj.random()
-            # rand_val = 0.5 # for debug
+            rand_val = 0.5 # for debug
             if rand_val < self.prov_noise:
                cnt_val+=1
 
