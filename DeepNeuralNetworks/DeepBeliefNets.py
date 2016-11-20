@@ -82,22 +82,22 @@ class DeepBeliefNets:
     def finetune(self, input_signals_arr, input_teachers, cnt_min_batch, learning_rate):
         layer_inputs = [0] * (self.cnt_layers + 1)
         layer_inputs[0] = input_signals_arr
-        
+        hiddens_arr = []
+
         for layer, dim_hidden_layer in enumerate(self.dims_hidden_layers):
 
             inputs_layer = []
             hiddens_arr_tmp = [[0] * dim_hidden_layer for j in range(cnt_min_batch)]
 
-            for n, (input_signals, hiddens) in enumerate(zip(input_signals_arr, hiddens_arr_tmp)):
+            for n, input_signals in enumerate(input_signals_arr):
                 if layer == 0:
                     inputs_layer = input_signals
                 else:
-                    inputs_layer = hiddens
+                    inputs_layer = hiddens_arr[n]
 
                 hiddens_arr_tmp[n] = self.sigmoid_layers[layer].forward(inputs_layer)
 
             hiddens_arr = hiddens_arr_tmp
-            #layer_inputs.append(copy.deepcopy(hiddens_arr))
             layer_inputs[layer+1] = copy.deepcopy(hiddens_arr)
 
         # forward & backward output layer
@@ -132,10 +132,6 @@ class DeepBeliefNets:
 
         return self.logistic_layer.predict(hiddens)
 
-            
-
-
-
 
 if __name__ == '__main__':
 
@@ -169,10 +165,10 @@ if __name__ == '__main__':
     # output data predicted by the model
     test_predict_output_labels = [[0] * CNT_OUTPUT_DATA for j in range(CNT_TEST_DATA)]
 
-    PRETRAIN_EPOCHS = 1          # maximum pre-training epochs
+    PRETRAIN_EPOCHS = 50          # maximum pre-training epochs
     PRETRAIN_LEARNING_RATE = 0.2    # learning rate for  pre-training
-    FINETUNE_EPOCHS = 1          # maximum fine-tune epochs
-    FINETUNE_LEARNING_RATE = 0.15   # learning rate for  fine-tune
+    FINETUNE_EPOCHS = 50          # maximum fine-tune epochs
+    finetune_learning_rate = 0.15   # learning rate for  fine-tune
 
     MIN_BATCH_SIZE = 50
     CNT_MIN_BATCH_TRAIN = CNT_TRAIN_DATA / MIN_BATCH_SIZE
@@ -363,8 +359,8 @@ if __name__ == '__main__':
 #        for valid_input_data_min_batch in enumerate(valid_input_data_set_min_batch):
         for batch in range(CNT_MIN_BATCH_VALID):
             classifier.finetune(valid_input_data_set_min_batch[batch], valid_teacher_data_set_min_batch[batch],
-                                CNT_MIN_BATCH_VALID, FINETUNE_LEARNING_RATE)
-        FINETUNE_LEARNING_RATE *= 0.98
+                                MIN_BATCH_SIZE, finetune_learning_rate)
+        finetune_learning_rate *= 0.98
     # classifier.
     print 'done.'
 
