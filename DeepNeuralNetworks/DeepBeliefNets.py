@@ -61,13 +61,11 @@ class DeepBeliefNets:
         self.logistic_layer = LogisticRegression(self.dims_hidden_layers[self.cnt_layers-1], self.dim_output_signal)
 
     def pretrain(self, input_signals_arr, min_batch_size, cnt_min_batch, epochs, learning_rate, cd_k_iter):
+        input_signals_tmp = [[0] * self.dim_input_signal for j in range(min_batch_size)]
         for layer in range(self.cnt_layers):
             for epoch in range(epochs):
                 print 'epoch ' + str(epoch)
                 for input_signals in input_signals_arr:
-
-                    input_signals_tmp = [[0] * self.dim_input_signal for j in range(min_batch_size)]
-
                     # Set input data for current layer
                     if layer == 0:
                         input_signals_tmp = input_signals
