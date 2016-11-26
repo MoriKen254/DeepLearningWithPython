@@ -7,7 +7,6 @@ This software is released under the MIT License.
 See LICENSE file included in this repository.
 """
 
-import csv
 import sys
 import random
 import copy
@@ -24,8 +23,7 @@ from DenoisingAutoencoders import DenoisingAutoencoders
 
 class StackedDenoisingAutoencoders:
 
-    def __init__(self, dim_input_signal, dims_hidden_layers, dim_output_layer, rand_obj, use_csv=False):
-        self.use_csv = use_csv
+    def __init__(self, dim_input_signal, dims_hidden_layers, dim_output_layer, rand_obj):
 
         if rand_obj is None:
             rand_obj = random(1234)
@@ -191,143 +189,68 @@ if __name__ == '__main__':
     rand_obj = random.Random()
     rand_obj.seed(1234)
 
-    use_csv = False
-    # get argument
-    if len(sys.argv) > 1:
-        if sys.argv[1] == 'use_csv':
-            use_csv = True
 
-    if use_csv:
-        file_dir = '../data/DeepNeuralNetworks/DeepBeliefNets/'
-        for pattern_idx in range(CNT_PATTERN):  # train for each pattern. pattern_idx < 3
+    binomial_train_true = Binomial(1, 1 - PROB_NOISE_TRAIN)
+    binomial_train_false = Binomial(1, PROB_NOISE_TRAIN)
 
-            # create training data
-            f = open(file_dir  + 'train_data' + str(pattern_idx + 1) + '.csv', 'r')
-            reader = csv.reader(f)
-            for n in range(CNT_TRAIN_DATA_EACH): # train for the number of data set for each pattern. n < 200
-                train_data_idx = pattern_idx * CNT_TRAIN_DATA_EACH + n
-                data = reader.next()
-                for input_idx in range(CNT_INPUT_DATA): # visible_idx < 4
-                    train_input_data_set[train_data_idx][input_idx] = float(data[input_idx])
-            f.close()
+    binomial_test_true = Binomial(1, 1 - PROB_NOISE_TEST)
+    binomial_test_false = Binomial(1, PROB_NOISE_TEST)
 
-            # create validation data
-            f1 = open(file_dir  + 'valid_data' + str(pattern_idx + 1) + '.csv', 'r')
-            f2 = open(file_dir  + 'valid_label' + str(pattern_idx + 1) + '.csv', 'r')
-            reader1 = csv.reader(f1)
-            reader2 = csv.reader(f2)
-            for n in range(CNT_VALID_DATA_EACH): # train for the number of data set for each pattern. n < 200
-                valid_data_idx = pattern_idx * CNT_VALID_DATA_EACH + n
+    for pattern_idx in range(CNT_PATTERN):  # train for each pattern. pattern_idx < 3
+        # create training data
+        for n in range(CNT_TRAIN_DATA_EACH): # train for the number of data set for each pattern. n < 200
+            train_data_idx = pattern_idx * CNT_TRAIN_DATA_EACH + n
 
-                data = reader1.next()
-                for input_idx in range(CNT_INPUT_DATA): # visible_idx < 4
-                    valid_input_data_set[valid_data_idx][input_idx] = float(data[input_idx])
+            for input_idx in range(CNT_INPUT_DATA): # visible_idx < 4
+                is_pattern_idx_in_curr_part = train_data_idx >= CNT_TRAIN_DATA_EACH * pattern_idx and \
+                                              train_data_idx <  CNT_TRAIN_DATA_EACH * (pattern_idx + 1)
+                is_visible_idx_in_curr_part = input_idx >= CNT_INPUT_EACH * pattern_idx and \
+                                              input_idx < CNT_INPUT_EACH * (pattern_idx + 1)
+                if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
+                    train_input_data_set[train_data_idx][input_idx] = binomial_train_true.compute(rand_obj)
+                else:
+                    train_input_data_set[train_data_idx][input_idx] = binomial_train_false.compute(rand_obj)
 
-                label = reader2.next()
-                for output_idx in range(CNT_OUTPUT_DATA):
-                    valid_teacher_labels[valid_data_idx][output_idx] = float(label[output_idx])
+        # create validation data
+        for n in range(CNT_VALID_DATA_EACH):
+            valid_data_idx = pattern_idx * CNT_VALID_DATA_EACH + n
 
-            f1.close()
-            f2.close()
+            for input_idx in range(CNT_INPUT_DATA): # visible_idx < 4
+                is_pattern_idx_in_curr_part = train_data_idx >= CNT_VALID_DATA_EACH * pattern_idx and \
+                                              train_data_idx <  CNT_VALID_DATA_EACH * (pattern_idx + 1)
+                is_visible_idx_in_curr_part = input_idx >= CNT_INPUT_EACH * pattern_idx and \
+                                              input_idx <  CNT_INPUT_EACH * (pattern_idx + 1)
+                if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
+                    valid_input_data_set[valid_data_idx][input_idx] = binomial_train_true.compute(rand_obj)
+                else:
+                    valid_input_data_set[valid_data_idx][input_idx] = binomial_train_false.compute(rand_obj)
 
-            # create test data
-            f1 = open(file_dir  + 'test_data' + str(pattern_idx + 1) + '.csv', 'r')
-            f2 = open(file_dir  + 'test_label' + str(pattern_idx + 1) + '.csv', 'r')
-            reader1 = csv.reader(f1)
-            reader2 = csv.reader(f2)
-            for n in range(CNT_TEST_DATA_EACH): # train for the number of data set for each pattern. n < 200
-                test_data_idx = pattern_idx * CNT_TEST_DATA_EACH + n
+            for output_idx in range(CNT_OUTPUT_DATA):
+                if output_idx == pattern_idx:
+                    valid_teacher_labels[valid_data_idx][output_idx] = 1
+                else:
+                    valid_teacher_labels[valid_data_idx][output_idx] = 0
 
-                data = reader1.next()
-                for input_idx in range(CNT_INPUT_DATA): # visible_idx < 4
-                    test_input_data_set[test_data_idx][input_idx] = float(data[input_idx])
+        # create test data
+        for n in range(CNT_TEST_DATA_EACH): # train for the number of data set for each pattern. n < 200
+            test_data_idx = pattern_idx * CNT_TEST_DATA_EACH + n
 
-                label = reader2.next()
-                for input_idx in range(CNT_OUTPUT_DATA): # visible_idx < 4
-                    test_teacher_labels[test_data_idx][input_idx] = float(label[input_idx])
-            f.close()
+            for input_idx in range(CNT_INPUT_DATA): # visible_idx < 4
+                is_pattern_idx_in_curr_part = test_data_idx >= CNT_TEST_DATA_EACH * pattern_idx and \
+                                              test_data_idx <  CNT_TEST_DATA_EACH * (pattern_idx + 1)
+                is_visible_idx_in_curr_part = input_idx >= CNT_INPUT_EACH * pattern_idx and \
+                                              input_idx <  CNT_INPUT_EACH * (pattern_idx + 1)
+                if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
+                    test_input_data_set[test_data_idx][input_idx] = binomial_test_true.compute(rand_obj)
+                else:
+                    test_input_data_set[test_data_idx][input_idx] = binomial_test_false.compute(rand_obj)
 
-    else:
-        binomial_train_true = Binomial(1, 1 - PROB_NOISE_TRAIN)
-        binomial_train_false = Binomial(1, PROB_NOISE_TRAIN)
+            for i in range(CNT_OUTPUT_DATA):
+                if i == pattern_idx:
+                    test_teacher_labels[test_data_idx][i] = 1
+                else:
+                    test_teacher_labels[test_data_idx][i] = 0
 
-        binomial_test_true = Binomial(1, 1 - PROB_NOISE_TEST)
-        binomial_test_false = Binomial(1, PROB_NOISE_TEST)
-
-        for pattern_idx in range(CNT_PATTERN):  # train for each pattern. pattern_idx < 3
-            # create training data
-            for n in range(CNT_TRAIN_DATA_EACH): # train for the number of data set for each pattern. n < 200
-                train_data_idx = pattern_idx * CNT_TRAIN_DATA_EACH + n
-
-                for input_idx in range(CNT_INPUT_DATA): # visible_idx < 4
-                    is_pattern_idx_in_curr_part = train_data_idx >= CNT_TRAIN_DATA_EACH * pattern_idx and \
-                                                  train_data_idx <  CNT_TRAIN_DATA_EACH * (pattern_idx + 1)
-                    is_visible_idx_in_curr_part = input_idx >= CNT_INPUT_EACH * pattern_idx and \
-                                                  input_idx < CNT_INPUT_EACH * (pattern_idx + 1)
-                    if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
-                        train_input_data_set[train_data_idx][input_idx] = binomial_train_true.compute(rand_obj)
-                    else:
-                        train_input_data_set[train_data_idx][input_idx] = binomial_train_false.compute(rand_obj)
-
-            # create validation data
-            for n in range(CNT_VALID_DATA_EACH):
-                valid_data_idx = pattern_idx * CNT_VALID_DATA_EACH + n
-
-                for input_idx in range(CNT_INPUT_DATA): # visible_idx < 4
-                    is_pattern_idx_in_curr_part = train_data_idx >= CNT_VALID_DATA_EACH * pattern_idx and \
-                                                  train_data_idx <  CNT_VALID_DATA_EACH * (pattern_idx + 1)
-                    is_visible_idx_in_curr_part = input_idx >= CNT_INPUT_EACH * pattern_idx and \
-                                                  input_idx <  CNT_INPUT_EACH * (pattern_idx + 1)
-                    if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
-                        valid_input_data_set[valid_data_idx][input_idx] = binomial_train_true.compute(rand_obj)
-                    else:
-                        valid_input_data_set[valid_data_idx][input_idx] = binomial_train_false.compute(rand_obj)
-
-                for output_idx in range(CNT_OUTPUT_DATA):
-                    if output_idx == pattern_idx:
-                        valid_teacher_labels[valid_data_idx][output_idx] = 1
-                    else:
-                        valid_teacher_labels[valid_data_idx][output_idx] = 0
-
-            # create test data
-            for n in range(CNT_TEST_DATA_EACH): # train for the number of data set for each pattern. n < 200
-                test_data_idx = pattern_idx * CNT_TEST_DATA_EACH + n
-
-                for input_idx in range(CNT_INPUT_DATA): # visible_idx < 4
-                    is_pattern_idx_in_curr_part = test_data_idx >= CNT_TEST_DATA_EACH * pattern_idx and \
-                                                  test_data_idx <  CNT_TEST_DATA_EACH * (pattern_idx + 1)
-                    is_visible_idx_in_curr_part = input_idx >= CNT_INPUT_EACH * pattern_idx and \
-                                                  input_idx <  CNT_INPUT_EACH * (pattern_idx + 1)
-                    if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
-                        test_input_data_set[test_data_idx][input_idx] = binomial_test_true.compute(rand_obj)
-                    else:
-                        test_input_data_set[test_data_idx][input_idx] = binomial_test_false.compute(rand_obj)
-
-                for i in range(CNT_OUTPUT_DATA):
-                    if i == pattern_idx:
-                        test_teacher_labels[test_data_idx][i] = 1
-                    else:
-                        test_teacher_labels[test_data_idx][i] = 0
-
-
-    if use_csv:
-        print 'Read random data set from csv file.'
-        f1 = open('../data/DeepNeuralNetworks/DeepBeliefNets/random_index_train.csv', 'r')
-        f2 = open('../data/DeepNeuralNetworks/DeepBeliefNets/random_index_valid.csv', 'r')
-        reader1 = csv.reader(f1)
-        reader2 = csv.reader(f2)
-        for j in range(MIN_BATCH_SIZE):
-            for i in range(CNT_MIN_BATCH_TRAIN):
-                idx_train = int(float(reader1.next()[0]))
-                train_input_data_set_min_batch[i][j] = train_input_data_set[idx_train]
-            for i in range(CNT_MIN_BATCH_VALID):
-                idx_valid = int(float(reader2.next()[0]))
-                valid_input_data_set_min_batch[i][j] = valid_input_data_set[idx_valid]
-                valid_teacher_data_set_min_batch[i][j] = valid_teacher_labels[idx_valid]
-        f1.close()
-        f2.close()
-
-    else:
         # create minbatches with training data
         for j in range(MIN_BATCH_SIZE):
             for i in range(CNT_MIN_BATCH_TRAIN):
