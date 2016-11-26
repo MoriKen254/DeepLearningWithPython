@@ -62,8 +62,9 @@ class StackedDenoisingAutoencoders:
     def pretrain(self, input_signals_arr, min_batch_size, cnt_min_batch, epochs, learning_rate, cd_k_iter):
         input_signals_tmp = [[0] * self.dim_input_signal for j in range(min_batch_size)]
         for layer in range(self.cnt_layers):
+            print 'layer ' + str(layer)
             for epoch in range(epochs):
-                print 'epoch ' + str(epoch)
+                print ' epoch ' + str(epoch)
                 for input_signals in input_signals_arr:
                     # Set input data for current layer
                     if layer == 0:
@@ -84,11 +85,12 @@ class StackedDenoisingAutoencoders:
         hiddens_arr = []
 
         for layer, dim_hidden_layer in enumerate(self.dims_hidden_layers):
-
+            print 'layer foward' + str(layer)
             inputs_layer = []
             hiddens_arr_tmp = [[0] * dim_hidden_layer for j in range(cnt_min_batch)]
 
             for n, input_signals in enumerate(input_signals_arr):
+                print ' input signal ' + str(n)
                 if layer == 0:
                     inputs_layer = input_signals
                 else:
@@ -105,7 +107,7 @@ class StackedDenoisingAutoencoders:
         # backward hidden layers
         grad_hidden = [[0] for j in range(1)]
         for layer in reversed(range(self.cnt_layers)):
-
+            print 'layer backword' + str(layer)
             if layer == self.cnt_layers - 1:
                 weights_prev = self.logistic_layer.weights
             else:
@@ -251,15 +253,15 @@ if __name__ == '__main__':
                 else:
                     test_teacher_labels[test_data_idx][i] = 0
 
-        # create minbatches with training data
-        for j in range(MIN_BATCH_SIZE):
-            for i in range(CNT_MIN_BATCH_TRAIN):
-                idx = min_batch_indexes[i * MIN_BATCH_SIZE + j]
-                train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
-            for i in range(CNT_MIN_BATCH_VALID):
-                idx = min_batch_indexes[i * MIN_BATCH_SIZE + j]
-                valid_input_data_set_min_batch[i][j] = valid_input_data_set[idx]
-                valid_teacher_data_set_min_batch[i][j] = valid_teacher_labels[idx]
+    # create minbatches with training data
+    for j in range(MIN_BATCH_SIZE):
+        for i in range(CNT_MIN_BATCH_TRAIN):
+            idx = min_batch_indexes[i * MIN_BATCH_SIZE + j]
+            train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
+        for i in range(CNT_MIN_BATCH_VALID):
+            idx = min_batch_indexes[i * MIN_BATCH_SIZE + j]
+            valid_input_data_set_min_batch[i][j] = valid_input_data_set[idx]
+            valid_teacher_data_set_min_batch[i][j] = valid_teacher_labels[idx]
 
     #
     # Build Stacked Denoising Autoencoders model
