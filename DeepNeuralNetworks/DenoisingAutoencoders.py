@@ -349,7 +349,7 @@ if __name__ == '__main__':
 
     # evvaluation
     print '-----------------------------------'
-    print 'RBM model reconstruction evaluation'
+    print 'DA model reconstruction evaluation'
     print '-----------------------------------'
 
     for pattern in range(CNT_PATTERN):
