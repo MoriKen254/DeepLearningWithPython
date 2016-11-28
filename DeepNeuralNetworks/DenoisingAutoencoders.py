@@ -62,18 +62,6 @@ class DenoisingAutoencoders:
         # forward hidden layer
         for n, input_signal in enumerate(input_signals):
 
-            # hidden parameters for positive phase
-            means_prob_hid_pos = [0] * self.dim_hidden   # mean of p( h_j | v^(k) ) for positive phase. 0.0 ~ 1.0
-            samples_hid_pos = [0] * self.dim_hidden      # h_j^(k) ~ p( h_j | v^(k) ) for positive phase. 0 or 1
-
-            # visible parameters for negative phase
-            means_prob_vis_neg = [0] * self.dim_visible  # mean of p( v_i | h^(k) ) for negative phase. 0.0 ~ 1.0
-            samples_vis_neg = [0] * self.dim_visible     # v_i^(k+1) # of p( v_i | h^(k) ) for negative phase. 0 or 1
-
-            # hidden parameters for negative phase
-            means_prob_hid_neg = [0] * self.dim_hidden   # mean of p( h_j | v^(k+1) ) for positive phase. 0.0 ~ 1.0
-            samples_hid_neg = [0] * self.dim_hidden      # h_j^(k+1) ~ p( h_j | v^(k+1) ) for positive phase. 0 or 1
-
             # add noise to original inputs
             corrupted_input_signals = self.getCorruptedInput(input_signal, corruption_level)
 
@@ -83,36 +71,49 @@ class DenoisingAutoencoders:
             # decode
             output_signals = self.getReconstructedInput(hiddens)
 
+            #
             # calculate gradients
+            #
 
             # visible biases
             gradients_visible_b_tmp = [0] * self.dim_visible
             for i, (input_elem, output_signal) in enumerate(zip(input_signal, output_signals)):
                 gradients_visible_b_tmp[i] = input_elem - output_signal
+                # dE/db_i = dE/dg_i ... (3.3.22)
+                # dE/dg_i = x_i -y_i ... (3.3.28)
                 gradients_visible_b[i] += gradients_visible_b_tmp[i]
 
             # hidden biases
             gradients_hidden_b_tmp = [0] * self.dim_hidden
             for j, (weight, hidden) in enumerate(zip(self.weights, hiddens)):
                 for i, (input_signal_elem, weight_elem, output_signal) in enumerate(zip(input_signal, weight, output_signals)):
+                    # Sum{ w_ji * (x_i - y_i) }
                     gradients_hidden_b_tmp[j] += weight_elem * (input_signal_elem - output_signal)
-
+                # z_j * (1 - z_j)
                 gradients_hidden_b_tmp[j] *= hidden * (1 - hidden)
+                # dE/dc_j = dE/dh_j ... (3.3.23)
+                # dE/dh_j = Sum{ w_ji * (x_i - y_i) } * z_j * (1 - z_j) ... (3.3.27)
                 gradients_hidden_b[j] += gradients_hidden_b_tmp[j]
 
             # weights
             for j, (gradient_hidden_b_tmp, hidden) in enumerate(zip(gradients_hidden_b_tmp, hiddens)):
                 for i, (corrupted_input_signal, gradient_visible_b_tmp) in enumerate(zip(corrupted_input_signals, gradients_visible_b_tmp)):
+                    # dE/dw_ji = dE/dh_j * hat(x)_i + dE/dg_i * z_j ... (3.3.21)
                     gradients_w[j][i] += gradient_hidden_b_tmp * corrupted_input_signal + gradient_visible_b_tmp * hidden
 
+        #
         # update params
+        #
         for j, (gradient_w, gradient_hidden_b) in enumerate(zip(gradients_w, gradients_hidden_b)):
             for i, (gradient_w_elem) in enumerate(gradient_w):
+                # w_ji^(k+1) = w_ji^(k) + eta * dE/dw_ji ... (3.3.29)
                 self.weights[j][i] += learning_rate * gradient_w_elem / min_batch_size
 
+            # b_i^(k+1) = b_i^(k) + eta * dE/db_i ... (3.3.30)
             self.hidden_biases[j] += learning_rate * gradient_hidden_b / min_batch_size
 
         for i, gradient_visible_b in enumerate(gradients_visible_b):
+            # c_j^(k+1) = c_j^(k) + eta * dE/dc_j ... (3.3.31)
             self.visible_biases[i] += learning_rate * gradient_visible_b / min_batch_size
 
     def getCorruptedInput(self, input_signals, corruption_level):
