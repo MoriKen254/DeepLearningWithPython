@@ -7,19 +7,10 @@ This software is released under the MIT License.
 See LICENSE file included in this repository.
 """
 
-import sys
 import random
-import copy
 
-from RestrictedBoltzmannMachines import RestrictedBoltzmannMachines
-sys.path.append('../SingleLayerNeuralNetworks')
-from LogisticRegression import LogisticRegression
-sys.path.append('../MultiLayerNeuralNetworks')
-from HiddenLayer import HiddenLayer
-sys.path.append('../util')
-from ActivationFunction import Sigmoid
-from RandomGenerator import Uniform, Binomial
-
+from util.ActivationFunction import Sigmoid
+from util.RandomGenerator import Uniform, Binomial
 
 class DenoisingAutoencoders:
     u"""

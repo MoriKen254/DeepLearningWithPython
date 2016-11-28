@@ -7,12 +7,10 @@ This software is released under the MIT License.
 See LICENSE file included in this repository.
 """
 
-import sys
 import random
 
-sys.path.append('../util')
-from ActivationFunction import Softmax
-from GaussianDistribution import GaussianDistribution
+from util.ActivationFunction import Softmax
+from util.GaussianDistribution import GaussianDistribution
 
 class LogisticRegression:
     u"""

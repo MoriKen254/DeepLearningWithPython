@@ -7,12 +7,10 @@ This software is released under the MIT License.
 See LICENSE file included in this repository.
 """
 
-import sys
 import random
 
-sys.path.append('../util')
-from ActivationFunction import Step
-from GaussianDistribution import GaussianDistribution
+from util.ActivationFunction import Step
+from util.GaussianDistribution import GaussianDistribution
 
 class Perceptrons:
     u"""

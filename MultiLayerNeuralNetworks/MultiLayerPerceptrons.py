@@ -7,13 +7,10 @@ This software is released under the MIT License.
 See LICENSE file included in this repository.
 """
 
-import sys
 import random
 
-from HiddenLayer import HiddenLayer
-
-sys.path.append('../SingleLayerNeuralNetworks')
-from LogisticRegression import LogisticRegression
+from SingleLayerNeuralNetworks.LogisticRegression import LogisticRegression
+from MultiLayerNeuralNetworks.HiddenLayer import HiddenLayer
 
 class MutliLayerPerceptrons:
     u"""

@@ -7,18 +7,13 @@ This software is released under the MIT License.
 See LICENSE file included in this repository.
 """
 
-import sys
 import random
 import copy
 
-from RestrictedBoltzmannMachines import RestrictedBoltzmannMachines
-sys.path.append('../SingleLayerNeuralNetworks')
-from LogisticRegression import LogisticRegression
-sys.path.append('../MultiLayerNeuralNetworks')
-from HiddenLayer import HiddenLayer
-sys.path.append('../util')
-from ActivationFunction import Sigmoid
-from RandomGenerator import Uniform, Binomial
+from DeepNeuralNetworks.RestrictedBoltzmannMachines import RestrictedBoltzmannMachines
+from SingleLayerNeuralNetworks.LogisticRegression import LogisticRegression
+from MultiLayerNeuralNetworks.HiddenLayer import HiddenLayer
+from util.RandomGenerator import Binomial
 
 class DeepBeliefNets:
 
