@@ -7,12 +7,10 @@ This software is released under the MIT License.
 See LICENSE file included in this repository.
 """
 
-import sys
 import random
 
-sys.path.append('../util')
-from ActivationFunction import Softmax
-from GaussianDistribution import GaussianDistribution
+from util.ActivationFunction import Softmax
+from util.GaussianDistribution import GaussianDistribution
 
 class LogisticRegression:
     u"""
@@ -106,11 +104,11 @@ class LogisticRegression:
 
 
 if __name__ == '__main__':
-    CNT_PATTERN = 3
-    CNT_TRAIN_DATA = 400 * CNT_PATTERN # number of training data
-    CNT_TEST_DATA = 60 * CNT_PATTERN # number of test data
-    DIM_INPUT_SIGNAL = 2 # dimensions of input data
-    DIM_OUTPUT_SIGNAL = CNT_PATTERN # dimensions of output data
+    CNT_PATTERN        = 3
+    CNT_TRAIN_DATA     = 400 * CNT_PATTERN  # number of training data
+    CNT_TEST_DATA      = 60 * CNT_PATTERN   # number of test data
+    DIM_INPUT_SIGNAL   = 2                  # dimensions of input data
+    DIM_OUTPUT_SIGNAL  = CNT_PATTERN        # dimensions of output data
 
     # input data for training
     train_input_data_set = [[0] * DIM_INPUT_SIGNAL for j in range(CNT_TRAIN_DATA)]

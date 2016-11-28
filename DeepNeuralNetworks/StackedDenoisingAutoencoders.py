@@ -7,19 +7,13 @@ This software is released under the MIT License.
 See LICENSE file included in this repository.
 """
 
-import sys
 import random
 import copy
 
-from RestrictedBoltzmannMachines import RestrictedBoltzmannMachines
-sys.path.append('../SingleLayerNeuralNetworks')
-from LogisticRegression import LogisticRegression
-sys.path.append('../MultiLayerNeuralNetworks')
-from HiddenLayer import HiddenLayer
-sys.path.append('../util')
-from ActivationFunction import Sigmoid
-from RandomGenerator import Uniform, Binomial
-from DenoisingAutoencoders import DenoisingAutoencoders
+from SingleLayerNeuralNetworks.LogisticRegression import LogisticRegression
+from MultiLayerNeuralNetworks.HiddenLayer import HiddenLayer
+from util.RandomGenerator import Binomial
+from DeepNeuralNetworks.DenoisingAutoencoders import DenoisingAutoencoders
 
 class StackedDenoisingAutoencoders:
 
@@ -136,52 +130,52 @@ class StackedDenoisingAutoencoders:
 
 if __name__ == '__main__':
 
-    CNT_TRAIN_DATA_EACH = 200           # for demo
-    CNT_VALID_DATA_EACH = 200           # for demo
-    CNT_TEST_DATA_EACH  = 50            # for demo
-    CNT_INPUT_EACH      = 20            # for demo
-    PROB_NOISE_TRAIN    = 0.2           # for demo
-    PROB_NOISE_TEST     = 0.25          # for demo
+    CNT_TRAIN_DATA_EACH_PTN     = 200           # for demo
+    CNT_VALID_DATA_EACH_PTN     = 200           # for demo
+    CNT_TEST_DATA_EACH_PTN      = 50            # for demo
+    DIM_INPUT_EACH_PTN          = 20            # for demo
+    PROB_NOISE_TRAIN            = 0.2           # for demo
+    PROB_NOISE_TEST             = 0.25          # for demo
 
-    CNT_PATTERN         = 3
+    CNT_PATTERN                 = 3
 
-    CNT_TRAIN_DATA      = CNT_TRAIN_DATA_EACH * CNT_PATTERN       # number of training data
-    CNT_VALID_DATA      = CNT_VALID_DATA_EACH * CNT_PATTERN       # number of validation data
-    CNT_TEST_DATA       = CNT_TEST_DATA_EACH * CNT_PATTERN        # number of test data
+    CNT_TRAIN_DATA_ALL_PTN      = CNT_TRAIN_DATA_EACH_PTN * CNT_PATTERN     # number of training data
+    CNT_VALID_DATA_ALL_PTN      = CNT_VALID_DATA_EACH_PTN * CNT_PATTERN     # number of validation data
+    CNT_TEST_DATA_ALL_PTN       = CNT_TEST_DATA_EACH_PTN * CNT_PATTERN      # number of test data
 
-    CNT_INPUT_DATA      = CNT_INPUT_EACH * CNT_PATTERN            # number of input data
-    CNT_OUTPUT_DATA     = CNT_PATTERN                             # number of output data
-    DIMS_HIDDEN_LAYERS  = [20, 20]
-    CORRUPTION_LEVEL    = 0.2
+    DIM_INPUT_SIGNAL_ALL_PTN    = DIM_INPUT_EACH_PTN * CNT_PATTERN          # number of input data
+    DIM_OUTPUT_SIGNAL_ALL_PTN   = CNT_PATTERN                               # number of output data
+    DIMS_HIDDEN_LAYERS          = [20, 20]
+    CORRUPTION_LEVEL            = 0.2
 
     # input data for training
-    train_input_data_set = [[0] * CNT_INPUT_DATA for j in range(CNT_TRAIN_DATA)]
+    train_input_data_set = [[0] * DIM_INPUT_SIGNAL_ALL_PTN for j in range(CNT_TRAIN_DATA_ALL_PTN)]
 
     # input data for validation
-    valid_input_data_set = [[0] * CNT_INPUT_DATA for j in range(CNT_VALID_DATA)]
-    valid_teacher_labels = [[0] * CNT_OUTPUT_DATA for j in range(CNT_VALID_DATA)]
+    valid_input_data_set = [[0] * DIM_INPUT_SIGNAL_ALL_PTN for j in range(CNT_VALID_DATA_ALL_PTN)]
+    valid_teacher_labels = [[0] * DIM_OUTPUT_SIGNAL_ALL_PTN for j in range(CNT_VALID_DATA_ALL_PTN)]
 
-    test_input_data_set = [[0] * CNT_INPUT_DATA for j in range(CNT_TEST_DATA)]
-    test_teacher_labels = [[0] * CNT_OUTPUT_DATA for j in range(CNT_TEST_DATA)]
+    test_input_data_set = [[0] * DIM_INPUT_SIGNAL_ALL_PTN for j in range(CNT_TEST_DATA_ALL_PTN)]
+    test_teacher_labels = [[0] * DIM_OUTPUT_SIGNAL_ALL_PTN for j in range(CNT_TEST_DATA_ALL_PTN)]
     # output data predicted by the model
-    test_predict_output_labels = [[0] * CNT_OUTPUT_DATA for j in range(CNT_TEST_DATA)]
+    test_predict_output_labels = [[0] * DIM_OUTPUT_SIGNAL_ALL_PTN for j in range(CNT_TEST_DATA_ALL_PTN)]
 
-    PRETRAIN_EPOCHS = 50          # maximum pre-training epochs
+    PRETRAIN_EPOCHS = 50            # maximum pre-training epochs
     PRETRAIN_LEARNING_RATE = 0.2    # learning rate for  pre-training
-    FINETUNE_EPOCHS = 50          # maximum fine-tune epochs
+    FINETUNE_EPOCHS = 50            # maximum fine-tune epochs
     finetune_learning_rate = 0.15   # learning rate for  fine-tune
 
     MIN_BATCH_SIZE = 50
-    CNT_MIN_BATCH_TRAIN = CNT_TRAIN_DATA / MIN_BATCH_SIZE
-    CNT_MIN_BATCH_VALID = CNT_VALID_DATA / MIN_BATCH_SIZE
+    CNT_MIN_BATCH_TRAIN = CNT_TRAIN_DATA_ALL_PTN / MIN_BATCH_SIZE
+    CNT_MIN_BATCH_VALID = CNT_VALID_DATA_ALL_PTN / MIN_BATCH_SIZE
 
-    train_input_data_set_min_batch = [[[0] * CNT_INPUT_DATA for j in range(MIN_BATCH_SIZE)]
+    train_input_data_set_min_batch = [[[0] * DIM_INPUT_SIGNAL_ALL_PTN for j in range(MIN_BATCH_SIZE)]
                                       for k in range(CNT_MIN_BATCH_TRAIN)]
-    valid_input_data_set_min_batch = [[[0] * CNT_INPUT_DATA for j in range(MIN_BATCH_SIZE)]
+    valid_input_data_set_min_batch = [[[0] * DIM_INPUT_SIGNAL_ALL_PTN for j in range(MIN_BATCH_SIZE)]
                                         for k in range(CNT_MIN_BATCH_VALID)]
-    valid_teacher_data_set_min_batch = [[[0] * CNT_INPUT_DATA for j in range(MIN_BATCH_SIZE)]
+    valid_teacher_data_set_min_batch = [[[0] * DIM_INPUT_SIGNAL_ALL_PTN for j in range(MIN_BATCH_SIZE)]
                                         for k in range(CNT_MIN_BATCH_VALID)]
-    min_batch_indexes = range(CNT_TRAIN_DATA)
+    min_batch_indexes = range(CNT_TRAIN_DATA_ALL_PTN)
     random.shuffle(min_batch_indexes)   # shuffle data index for SGD
 
     #
@@ -200,54 +194,54 @@ if __name__ == '__main__':
 
     for pattern_idx in range(CNT_PATTERN):  # train for each pattern. pattern_idx < 3
         # create training data
-        for n in range(CNT_TRAIN_DATA_EACH): # train for the number of data set for each pattern. n < 200
-            train_data_idx = pattern_idx * CNT_TRAIN_DATA_EACH + n
+        for n in range(CNT_TRAIN_DATA_EACH_PTN): # train for the number of data set for each pattern. n < 200
+            train_data_idx = pattern_idx * CNT_TRAIN_DATA_EACH_PTN + n
 
-            for input_idx in range(CNT_INPUT_DATA): # visible_idx < 4
-                is_pattern_idx_in_curr_part = train_data_idx >= CNT_TRAIN_DATA_EACH * pattern_idx and \
-                                              train_data_idx <  CNT_TRAIN_DATA_EACH * (pattern_idx + 1)
-                is_visible_idx_in_curr_part = input_idx >= CNT_INPUT_EACH * pattern_idx and \
-                                              input_idx < CNT_INPUT_EACH * (pattern_idx + 1)
+            for input_idx in range(DIM_INPUT_SIGNAL_ALL_PTN): # visible_idx < 4
+                is_pattern_idx_in_curr_part = train_data_idx >= CNT_TRAIN_DATA_EACH_PTN * pattern_idx and \
+                                              train_data_idx < CNT_TRAIN_DATA_EACH_PTN * (pattern_idx + 1)
+                is_visible_idx_in_curr_part = input_idx >= DIM_INPUT_EACH_PTN * pattern_idx and \
+                                              input_idx < DIM_INPUT_EACH_PTN * (pattern_idx + 1)
                 if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
                     train_input_data_set[train_data_idx][input_idx] = binomial_train_true.compute(rand_obj)
                 else:
                     train_input_data_set[train_data_idx][input_idx] = binomial_train_false.compute(rand_obj)
 
         # create validation data
-        for n in range(CNT_VALID_DATA_EACH):
-            valid_data_idx = pattern_idx * CNT_VALID_DATA_EACH + n
+        for n in range(CNT_VALID_DATA_EACH_PTN):
+            valid_data_idx = pattern_idx * CNT_VALID_DATA_EACH_PTN + n
 
-            for input_idx in range(CNT_INPUT_DATA): # visible_idx < 4
-                is_pattern_idx_in_curr_part = train_data_idx >= CNT_VALID_DATA_EACH * pattern_idx and \
-                                              train_data_idx <  CNT_VALID_DATA_EACH * (pattern_idx + 1)
-                is_visible_idx_in_curr_part = input_idx >= CNT_INPUT_EACH * pattern_idx and \
-                                              input_idx <  CNT_INPUT_EACH * (pattern_idx + 1)
+            for input_idx in range(DIM_INPUT_SIGNAL_ALL_PTN): # visible_idx < 4
+                is_pattern_idx_in_curr_part = train_data_idx >= CNT_VALID_DATA_EACH_PTN * pattern_idx and \
+                                              train_data_idx < CNT_VALID_DATA_EACH_PTN * (pattern_idx + 1)
+                is_visible_idx_in_curr_part = input_idx >= DIM_INPUT_EACH_PTN * pattern_idx and \
+                                              input_idx < DIM_INPUT_EACH_PTN * (pattern_idx + 1)
                 if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
                     valid_input_data_set[valid_data_idx][input_idx] = binomial_train_true.compute(rand_obj)
                 else:
                     valid_input_data_set[valid_data_idx][input_idx] = binomial_train_false.compute(rand_obj)
 
-            for output_idx in range(CNT_OUTPUT_DATA):
+            for output_idx in range(DIM_OUTPUT_SIGNAL_ALL_PTN):
                 if output_idx == pattern_idx:
                     valid_teacher_labels[valid_data_idx][output_idx] = 1
                 else:
                     valid_teacher_labels[valid_data_idx][output_idx] = 0
 
         # create test data
-        for n in range(CNT_TEST_DATA_EACH): # train for the number of data set for each pattern. n < 200
-            test_data_idx = pattern_idx * CNT_TEST_DATA_EACH + n
+        for n in range(CNT_TEST_DATA_EACH_PTN): # train for the number of data set for each pattern. n < 200
+            test_data_idx = pattern_idx * CNT_TEST_DATA_EACH_PTN + n
 
-            for input_idx in range(CNT_INPUT_DATA): # visible_idx < 4
-                is_pattern_idx_in_curr_part = test_data_idx >= CNT_TEST_DATA_EACH * pattern_idx and \
-                                              test_data_idx <  CNT_TEST_DATA_EACH * (pattern_idx + 1)
-                is_visible_idx_in_curr_part = input_idx >= CNT_INPUT_EACH * pattern_idx and \
-                                              input_idx <  CNT_INPUT_EACH * (pattern_idx + 1)
+            for input_idx in range(DIM_INPUT_SIGNAL_ALL_PTN): # visible_idx < 4
+                is_pattern_idx_in_curr_part = test_data_idx >= CNT_TEST_DATA_EACH_PTN * pattern_idx and \
+                                              test_data_idx < CNT_TEST_DATA_EACH_PTN * (pattern_idx + 1)
+                is_visible_idx_in_curr_part = input_idx >= DIM_INPUT_EACH_PTN * pattern_idx and \
+                                              input_idx < DIM_INPUT_EACH_PTN * (pattern_idx + 1)
                 if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
                     test_input_data_set[test_data_idx][input_idx] = binomial_test_true.compute(rand_obj)
                 else:
                     test_input_data_set[test_data_idx][input_idx] = binomial_test_false.compute(rand_obj)
 
-            for i in range(CNT_OUTPUT_DATA):
+            for i in range(DIM_OUTPUT_SIGNAL_ALL_PTN):
                 if i == pattern_idx:
                     test_teacher_labels[test_data_idx][i] = 1
                 else:
@@ -269,7 +263,7 @@ if __name__ == '__main__':
 
     # construct SDA
     print 'Building the model...'
-    classifier = StackedDenoisingAutoencoders(CNT_INPUT_DATA, DIMS_HIDDEN_LAYERS, CNT_OUTPUT_DATA, rand_obj)
+    classifier = StackedDenoisingAutoencoders(DIM_INPUT_SIGNAL_ALL_PTN, DIMS_HIDDEN_LAYERS, DIM_OUTPUT_SIGNAL_ALL_PTN, rand_obj)
     print 'done.'
 
     # pre-training the model
@@ -324,7 +318,7 @@ if __name__ == '__main__':
         precision[i] /= col
         recall[i] /= row
 
-    accuracy /= CNT_TEST_DATA
+    accuracy /= CNT_TEST_DATA_ALL_PTN
 
     print '-------------------------------'
     print 'SDA Regression model evaluation'

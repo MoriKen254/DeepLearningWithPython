@@ -8,11 +8,9 @@ See LICENSE file included in this repository.
 """
 
 import random
-import sys
 
-sys.path.append('../util')
-from RandomGenerator import Uniform, Binomial
-from ActivationFunction import Sigmoid, Tanh, ReLU
+from util.RandomGenerator import Uniform, Binomial
+from util.ActivationFunction import Sigmoid, Tanh, ReLU
 
 class HiddenLayer:
 
