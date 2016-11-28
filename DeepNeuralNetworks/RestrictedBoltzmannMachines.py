@@ -82,30 +82,41 @@ class RestrictedBoltzmannMachines:
 
                 # Gibbs sampling
                 if step == 0:
+                    # h_j^(k)   ~ p(h_j|v^(k)) and v_i^(k+1) ~ p(v_i|h^(k))
                     self.gibbsHidVisHid(samples_hid_pos, means_prob_vis_neg,
                                         samples_vis_neg, means_prob_hid_neg, samples_hid_neg)
                 else:
+                    # h_j^(k)   ~ p(h_j|v^(k)) and v_i^(k+1) ~ p(v_i|h^(k))
                     self.gibbsHidVisHid(samples_hid_neg, means_prob_vis_neg,
                                         samples_vis_neg, means_prob_hid_neg, samples_hid_neg)
 
             # calculate gradients
             for j, (mean_prob_hid_pos, mean_prob_hid_neg) in enumerate(zip(means_prob_hid_pos, means_prob_hid_neg)):
                 for i, (input_elem, sample_vis_neg) in enumerate(zip(input_signal, samples_vis_neg)):
+                    # d(ln L)/dw_ij = p(H_j=1|v) * v_i - Sum{ p(v) * p(H_j=1 | v) * v_i } ... (3.3.9)
+                    #               = p(H_j=1|v^(0)) * v_i^(0) - p(H_j=1 | v^(k)) * v_i^(k) ... (3.3.13)
                     gradients_w[j][i] += mean_prob_hid_pos * input_elem - mean_prob_hid_neg * sample_vis_neg
 
+                # d(ln L)/db_i = v_i - Sum{ p(v) * v_i } ... (3.3.10)
+                #              = v_i^(0) - v_i^(k) ... (3.3.14)
                 gradients_hidden_b[j] += mean_prob_hid_pos - mean_prob_hid_neg
 
             for i, (input_elem, sample_vis_neg) in enumerate(zip(input_signal, samples_vis_neg)):
+                # d(ln L)/dc_j = p(H_j=1|v) - Sum{ p(v) * p(H_j=1 | v) } ... (3.3.11)
+                #              = p(H_j=1|v^(0)) - p(H_j=1 | v^(k)) ... (3.3.15)
                 gradients_visible_b[i] += input_elem - sample_vis_neg
 
         # update params
         for j, (gradient_w, gradient_hidden_b) in enumerate(zip(gradients_w, gradients_hidden_b)):
             for i, (gradient_w_elem) in enumerate(gradient_w):
+                # w_ij^(t+1) = w_ij^(t) + eta * { v_i^(0) - v_i^(k) } ... (3.3.13)
                 self.weights[j][i] += learning_rate * gradient_w_elem / min_batch_size
 
+            # b_i^(t+1) = b_i^(t) + eta * { v_i^(0) - v_i^(k) } ... (3.3.14)
             self.hidden_biases[j] += learning_rate * gradient_hidden_b / min_batch_size
 
         for i, gradient_visible_b in enumerate(gradients_visible_b):
+            # c_j^(t+1) = c_j^(t) + eta * { p(H_j=1|v^(0)) - p(H_j=1 | v^(k)) } ... (3.3.15)
             self.visible_biases[i] += learning_rate * gradient_visible_b / min_batch_size
 
 
