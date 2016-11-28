@@ -7,7 +7,6 @@ This software is released under the MIT License.
 See LICENSE file included in this repository.
 """
 
-import csv
 import sys
 import random
 
@@ -21,7 +20,7 @@ class MutliLayerPerceptrons:
     Class for MutliLayerPerceptrons
     """
 
-    def __init__(self, dim_input_signal, dim_hidden, dim_output_signal, rand_obj, use_csv=False):
+    def __init__(self, dim_input_signal, dim_hidden, dim_output_signal, rand_obj):
 
         self.dim_input_signal = dim_input_signal
         self.dim_hidden = dim_hidden
@@ -33,7 +32,7 @@ class MutliLayerPerceptrons:
         self.rand_obj = rand_obj
 
         # construct hidden layer with tanh as activation function
-        self.hidden_layer = HiddenLayer(dim_input_signal, dim_hidden, None, None, rand_obj, "Tanh", use_csv)
+        self.hidden_layer = HiddenLayer(dim_input_signal, dim_hidden, None, None, rand_obj, "Tanh")
 
         # construct output layer i.e. multi-class logistic layer
         self.logisticLayer = LogisticRegression(dim_hidden, dim_output_signal)
@@ -112,37 +111,19 @@ if __name__ == '__main__':
     rand_obj = random.Random()
     rand_obj.seed(1234)
 
-    use_csv = False
-    # get argument
-    if len(sys.argv) > 1:
-        if sys.argv[1] == 'use_csv':
-            use_csv = True
-
-    if use_csv:
-        print 'Read random data set from csv file.'
-        f = open('../data/MultiLayerPerceptrons/random_index.csv', 'r')
-        reader = csv.reader(f)
-        for i in range(CNT_MIN_BATCH):
-            for j in range(MIN_BATCH_SIZE):
-                idx = int(float(reader.next()[0]))
-                train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
-                train_teacher_data_set_min_batch[i][j] = train_teacher_labels[idx]
-        f.close()
-
-    else:
-        # create minbatches with training data
-        for i in range(CNT_MIN_BATCH):
-            for j in range(MIN_BATCH_SIZE):
-                idx = min_batch_indexes[i * MIN_BATCH_SIZE + j]
-                train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
-                train_teacher_data_set_min_batch[i][j] = train_teacher_labels[idx]
+    # create minbatches with training data
+    for i in range(CNT_MIN_BATCH):
+        for j in range(MIN_BATCH_SIZE):
+            idx = min_batch_indexes[i * MIN_BATCH_SIZE + j]
+            train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
+            train_teacher_data_set_min_batch[i][j] = train_teacher_labels[idx]
 
     #
     # Build Multi-Layer Perceptrons model
     #
 
     # construct
-    classifier = MutliLayerPerceptrons(DIM_INPUT_SIGNAL, DIM_HIDDEN, DIM_OUTPUT_SIGNAL, rand_obj, use_csv)
+    classifier = MutliLayerPerceptrons(DIM_INPUT_SIGNAL, DIM_HIDDEN, DIM_OUTPUT_SIGNAL, rand_obj)
 
     # train
     for epoch in range(EPOCHS):   # training epochs

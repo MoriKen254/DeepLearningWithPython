@@ -19,10 +19,12 @@ from HiddenLayer import HiddenLayer
 sys.path.append('../util')
 from ActivationFunction import Sigmoid
 from RandomGenerator import Uniform, Binomial
+from DenoisingAutoencoders import DenoisingAutoencoders
 
-class DeepBeliefNets:
+class StackedDenoisingAutoencoders:
 
     def __init__(self, dim_input_signal, dims_hidden_layers, dim_output_layer, rand_obj):
+
         if rand_obj is None:
             rand_obj = random(1234)
         self.rand_obj = rand_obj
@@ -31,8 +33,8 @@ class DeepBeliefNets:
         self.dims_hidden_layers = dims_hidden_layers
         self.dim_output_signal = dim_output_layer
         self.cnt_layers = len(dims_hidden_layers)
-        self.sigmoid_layers = []#HiddenLayer(self.cnt_layers)
-        self.rbm_layers = []
+        self.sigmoid_layers = []
+        self.da_layers = []
 
         # construct multi-layer
         dim_prev_layer_input = 0
@@ -48,9 +50,9 @@ class DeepBeliefNets:
                                                    None, None, rand_obj, 'Sigmoid'))
 
             # construct RBM layers
-            self.rbm_layers.append(RestrictedBoltzmannMachines(dim_curr_layer_input, dim_hidden_layer,
-                                                               self.sigmoid_layers[i].weights,
-                                                               self.sigmoid_layers[i].biases, None, rand_obj))
+            self.da_layers.append(DenoisingAutoencoders(dim_curr_layer_input, dim_hidden_layer,
+                                                         self.sigmoid_layers[i].weights,
+                                                         self.sigmoid_layers[i].biases, None, rand_obj))
 
             dim_prev_layer_input = dim_hidden_layer
 
@@ -75,7 +77,7 @@ class DeepBeliefNets:
                         for i, signal_prev_layer in enumerate(signals_prev_layer):
                             input_signals_tmp[i] = self.sigmoid_layers[layer-1].output_binomial(signal_prev_layer, rand_obj)
 
-                    self.rbm_layers[layer].contrastiveDivergence(input_signals_tmp, min_batch_size, learning_rate, cd_k_iter)
+                    self.da_layers[layer].train(input_signals_tmp, min_batch_size, learning_rate, cd_k_iter)
 
     def finetune(self, input_signals_arr, input_teachers, cnt_min_batch, learning_rate):
         layer_inputs = [0] * (self.cnt_layers + 1)
@@ -150,7 +152,7 @@ if __name__ == '__main__':
     CNT_INPUT_DATA      = CNT_INPUT_EACH * CNT_PATTERN            # number of input data
     CNT_OUTPUT_DATA     = CNT_PATTERN                             # number of output data
     DIMS_HIDDEN_LAYERS  = [20, 20]
-    CD_K_ITERATION      = 1             # CD-k in RBM
+    CORRUPTION_LEVEL    = 0.2
 
     # input data for training
     train_input_data_set = [[0] * CNT_INPUT_DATA for j in range(CNT_TRAIN_DATA)]
@@ -188,6 +190,7 @@ if __name__ == '__main__':
 
     rand_obj = random.Random()
     rand_obj.seed(1234)
+
 
     binomial_train_true = Binomial(1, 1 - PROB_NOISE_TRAIN)
     binomial_train_false = Binomial(1, PROB_NOISE_TRAIN)
@@ -261,18 +264,18 @@ if __name__ == '__main__':
             valid_teacher_data_set_min_batch[i][j] = valid_teacher_labels[idx]
 
     #
-    # Build Deep Belief Nets model
+    # Build Stacked Denoising Autoencoders model
     #
 
-    # construct DBN
+    # construct SDA
     print 'Building the model...'
-    classifier = DeepBeliefNets(CNT_INPUT_DATA, DIMS_HIDDEN_LAYERS, CNT_OUTPUT_DATA, rand_obj)
+    classifier = StackedDenoisingAutoencoders(CNT_INPUT_DATA, DIMS_HIDDEN_LAYERS, CNT_OUTPUT_DATA, rand_obj)
     print 'done.'
 
     # pre-training the model
     print 'Pre-training the model...'
     classifier.pretrain(train_input_data_set_min_batch, MIN_BATCH_SIZE, CNT_MIN_BATCH_TRAIN, PRETRAIN_EPOCHS,
-                        PRETRAIN_LEARNING_RATE, CD_K_ITERATION)
+                        PRETRAIN_LEARNING_RATE, CORRUPTION_LEVEL)
     # classifier.
     print 'done.'
 
@@ -324,7 +327,7 @@ if __name__ == '__main__':
     accuracy /= CNT_TEST_DATA
 
     print '-------------------------------'
-    print 'DBN Regression model evaluation'
+    print 'SDA Regression model evaluation'
     print '-------------------------------'
     print 'Accuracy:  %.1f %%' % (accuracy * 100)
     print 'Precision:'

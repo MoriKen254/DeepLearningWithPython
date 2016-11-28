@@ -7,7 +7,6 @@ This software is released under the MIT License.
 See LICENSE file included in this repository.
 """
 
-import csv
 import random
 import sys
 
@@ -17,7 +16,7 @@ from ActivationFunction import Sigmoid, Tanh, ReLU
 
 class HiddenLayer:
 
-    def __init__(self, dim_input_signal, dim_output_signal, weights, biases, rand_obj, activation, use_csv=False):
+    def __init__(self, dim_input_signal, dim_output_signal, weights, biases, rand_obj, activation):
 
         if rand_obj is None:
             rand_obj = random(1234)
@@ -26,17 +25,10 @@ class HiddenLayer:
             weights = [[0] * dim_input_signal for i in range(dim_output_signal)]
             w = 1./dim_input_signal
 
-            if use_csv:
-                f = open('../data/MultiLayerPerceptrons/weights_hidden.csv', 'r')
-                reader = csv.reader(f)
-                for j, row in enumerate(reader):
-                    for i in range(dim_input_signal):
-                        weights[j][i] = float(row[i])
-            else:
-                for j in range(dim_output_signal):
-                    for i in range(dim_input_signal):
-                        random_generator = Uniform(-w, w)
-                        weights[j][i] = random_generator.compute(rand_obj)
+            for j in range(dim_output_signal):
+                for i in range(dim_input_signal):
+                    random_generator = Uniform(-w, w)
+                    weights[j][i] = random_generator.compute(rand_obj)
 
         if biases is None:
             biases = [0] * dim_output_signal

@@ -7,7 +7,6 @@ This software is released under the MIT License.
 See LICENSE file included in this repository.
 """
 
-import csv
 import sys
 import random
 import copy
@@ -27,8 +26,7 @@ class DenoisingAutoencoders:
     Class for RestrictedBoltzmannMachines
     """
 
-    def __init__(self, dim_visible, dim_hidden, weights, hidden_biases, visible_biases, rand_obj, use_csv=False):
-        self.use_csv = use_csv
+    def __init__(self, dim_visible, dim_hidden, weights, hidden_biases, visible_biases, rand_obj):
 
         if rand_obj is None:
             rand_obj = random(1234)
@@ -38,25 +36,12 @@ class DenoisingAutoencoders:
         if weights is None:
             weights_tmp = [[0] * dim_visible for j in range(dim_hidden)]
 
-            if self.use_csv:
-                file_dir = '../data/DeepNeuralNetworks/RestrictedBoltzmannMachines/'
-                # create training data
-                f = open(file_dir  + 'weights_init.csv', 'r')
-                reader = csv.reader(f)
-                for j in range(dim_hidden):
-                    weight_tmp = reader.next()
-                    for i in range(dim_visible):
-                        weights_tmp[j][i] = float(weight_tmp[i])
+            w = 1. / dim_visible
+            random_generator = Uniform(-w, w)
 
-            else:
-                w = 1. / dim_visible
-                random_generator = Uniform(-w, w)
-
-                for j in range(dim_hidden):
-                    for i in range(dim_visible):
-                        weights_tmp[j][i] = random_generator.compute(rand_obj)
-
-
+            for j in range(dim_hidden):
+                for i in range(dim_visible):
+                    weights_tmp[j][i] = random_generator.compute(rand_obj)
         else:
             weights_tmp = weights
 
@@ -129,7 +114,6 @@ class DenoisingAutoencoders:
                 for i, (corrupted_input_signal, gradient_visible_b_tmp) in enumerate(zip(corrupted_input_signals, gradients_visible_b_tmp)):
                     gradients_w[j][i] += gradient_hidden_b_tmp * corrupted_input_signal + gradient_visible_b_tmp * hidden
 
-        ####### TODO
         # update params
         for j, (gradient_w, gradient_hidden_b) in enumerate(zip(gradients_w, gradients_hidden_b)):
             for i, (gradient_w_elem) in enumerate(gradient_w):
@@ -240,96 +224,53 @@ if __name__ == '__main__':
     rand_obj = random.Random()
     rand_obj.seed(1234)
 
-    use_csv = False
-    # get argument
-    if len(sys.argv) > 1:
-        if sys.argv[1] == 'use_csv':
-            use_csv = True
+    binomial_train_true = Binomial(1, 1 - PROB_NOISE_TRAIN)
+    binomial_train_false = Binomial(1, PROB_NOISE_TRAIN)
 
-    if use_csv:
-        file_dir = '../data/DeepNeuralNetworks/RestrictedBoltzmannMachines/'
-        for pattern_idx in range(CNT_PATTERN):  # train for each pattern. pattern_idx < 3
+    binomial_test_true = Binomial(1, 1 - PROB_NOISE_TEST)
+    binomial_test_false = Binomial(1, PROB_NOISE_TEST)
 
-            # create training data
-            f = open(file_dir  + 'train' + str(pattern_idx + 1) + '.csv', 'r')
-            reader = csv.reader(f)
-            for n in range(CNT_TRAIN_DATA_EACH): # train for the number of data set for each pattern. n < 200
-                train_data_idx = pattern_idx * CNT_TRAIN_DATA_EACH + n
-                data = reader.next()
-                for visible_idx in range(DIM_VISIBLE): # visible_idx < 4
-                    train_input_data_set[train_data_idx][visible_idx] = float(data[visible_idx])
-            f.close()
+    for pattern_idx in range(CNT_PATTERN):  # train for each pattern. pattern_idx < 3
+        # create training data
+        for n in range(CNT_TRAIN_DATA_EACH): # train for the number of data set for each pattern. n < 200
+            train_data_idx = pattern_idx * CNT_TRAIN_DATA_EACH + n
 
-            # create test data
-            f = open(file_dir  + 'test' + str(pattern_idx + 1) + '.csv', 'r')
-            reader = csv.reader(f)
-            for n in range(CNT_TEST_DATA_EACH): # train for the number of data set for each pattern. n < 200
-                test_data_idx = pattern_idx * CNT_TEST_DATA_EACH + n
-                data = reader.next()
-                for visible_idx in range(DIM_VISIBLE): # visible_idx < 4
-                    test_input_data_set[test_data_idx][visible_idx] = float(data[visible_idx])
-            f.close()
+            for visible_idx in range(DIM_VISIBLE): # visible_idx < 4
+                is_pattern_idx_in_curr_part = train_data_idx >= CNT_TRAIN_DATA_EACH * pattern_idx and \
+                                              train_data_idx <  CNT_TRAIN_DATA_EACH * (pattern_idx + 1)
+                is_visible_idx_in_curr_part = visible_idx    >= CNT_VISIBLE_EACH    * pattern_idx and \
+                                              visible_idx    <  CNT_VISIBLE_EACH    * (pattern_idx + 1)
+                if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
+                    train_input_data_set[train_data_idx][visible_idx] = binomial_train_true.compute(rand_obj)
+                else:
+                    train_input_data_set[train_data_idx][visible_idx] = binomial_train_false.compute(rand_obj)
 
-    else:
-        binomial_train_true = Binomial(1, 1 - PROB_NOISE_TRAIN)
-        binomial_train_false = Binomial(1, PROB_NOISE_TRAIN)
+        # create test data
+        for n in range(CNT_TEST_DATA_EACH): # train for the number of data set for each pattern. n < 200
+            test_data_idx = pattern_idx * CNT_TEST_DATA_EACH + n
 
-        binomial_test_true = Binomial(1, 1 - PROB_NOISE_TEST)
-        binomial_test_false = Binomial(1, PROB_NOISE_TEST)
+            for visible_idx in range(DIM_VISIBLE): # visible_idx < 4
+                is_pattern_idx_in_curr_part = test_data_idx >= CNT_TEST_DATA_EACH * pattern_idx and \
+                                              test_data_idx <  CNT_TEST_DATA_EACH * (pattern_idx + 1)
+                is_visible_idx_in_curr_part = visible_idx   >= CNT_VISIBLE_EACH   * pattern_idx and \
+                                              visible_idx   <  CNT_VISIBLE_EACH   * (pattern_idx + 1)
+                if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
+                    test_input_data_set[test_data_idx][visible_idx] = binomial_test_true.compute(rand_obj)
+                else:
+                    test_input_data_set[test_data_idx][visible_idx] = binomial_test_false.compute(rand_obj)
 
-        for pattern_idx in range(CNT_PATTERN):  # train for each pattern. pattern_idx < 3
-            # create training data
-            for n in range(CNT_TRAIN_DATA_EACH): # train for the number of data set for each pattern. n < 200
-                train_data_idx = pattern_idx * CNT_TRAIN_DATA_EACH + n
-
-                for visible_idx in range(DIM_VISIBLE): # visible_idx < 4
-                    is_pattern_idx_in_curr_part = train_data_idx >= CNT_TRAIN_DATA_EACH * pattern_idx and \
-                                                  train_data_idx <  CNT_TRAIN_DATA_EACH * (pattern_idx + 1)
-                    is_visible_idx_in_curr_part = visible_idx    >= CNT_VISIBLE_EACH    * pattern_idx and \
-                                                  visible_idx    <  CNT_VISIBLE_EACH    * (pattern_idx + 1)
-                    if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
-                        train_input_data_set[train_data_idx][visible_idx] = binomial_train_true.compute(rand_obj)
-                    else:
-                        train_input_data_set[train_data_idx][visible_idx] = binomial_train_false.compute(rand_obj)
-
-            # create test data
-            for n in range(CNT_TEST_DATA_EACH): # train for the number of data set for each pattern. n < 200
-                test_data_idx = pattern_idx * CNT_TEST_DATA_EACH + n
-
-                for visible_idx in range(DIM_VISIBLE): # visible_idx < 4
-                    is_pattern_idx_in_curr_part = test_data_idx >= CNT_TEST_DATA_EACH * pattern_idx and \
-                                                  test_data_idx <  CNT_TEST_DATA_EACH * (pattern_idx + 1)
-                    is_visible_idx_in_curr_part = visible_idx   >= CNT_VISIBLE_EACH   * pattern_idx and \
-                                                  visible_idx   <  CNT_VISIBLE_EACH   * (pattern_idx + 1)
-                    if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
-                        test_input_data_set[test_data_idx][visible_idx] = binomial_test_true.compute(rand_obj)
-                    else:
-                        test_input_data_set[test_data_idx][visible_idx] = binomial_test_false.compute(rand_obj)
-
-
-    if use_csv:
-        print 'Read random data set from csv file.'
-        f = open('../data/DeepNeuralNetworks/RestrictedBoltzmannMachines/random_index.csv', 'r')
-        reader = csv.reader(f)
-        for i in range(CNT_MIN_BATCH):
-            for j in range(MIN_BATCH_SIZE):
-                idx = int(float(reader.next()[0]))
-                train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
-        f.close()
-
-    else:
-        # create minbatches with training data
-        for i in range(CNT_MIN_BATCH):
-            for j in range(MIN_BATCH_SIZE):
-                idx = min_batch_indexes[i * MIN_BATCH_SIZE + j]
-                train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
+    # create minbatches with training data
+    for i in range(CNT_MIN_BATCH):
+        for j in range(MIN_BATCH_SIZE):
+            idx = min_batch_indexes[i * MIN_BATCH_SIZE + j]
+            train_input_data_set_min_batch[i][j] = train_input_data_set[idx]
 
     #
     # Build Denoising AutoEncoders model
     #
 
     # construct
-    dae = DenoisingAutoencoders(DIM_VISIBLE, DIM_HIDDEN, None, None, None, rand_obj, use_csv)
+    dae = DenoisingAutoencoders(DIM_VISIBLE, DIM_HIDDEN, None, None, None, rand_obj)
 
     # train
     for epoch in range(EPOCHS):   # training epochs
@@ -349,7 +290,7 @@ if __name__ == '__main__':
 
     # evvaluation
     print '-----------------------------------'
-    print 'RBM model reconstruction evaluation'
+    print 'DA model reconstruction evaluation'
     print '-----------------------------------'
 
     for pattern in range(CNT_PATTERN):
