@@ -137,7 +137,7 @@ if __name__ == '__main__':
     CNT_TRAIN_DATA_EACH_PTN     = 200           # for demo
     CNT_VALID_DATA_EACH_PTN     = 200           # for demo
     CNT_TEST_DATA_EACH_PTN      = 50            # for demo
-    CNT_INPUT_EACH_PTN          = 20            # for demo
+    DIM_INPUT_EACH_PTN          = 20            # for demo
     PROB_NOISE_TRAIN            = 0.2           # for demo
     PROB_NOISE_TEST             = 0.25          # for demo
 
@@ -147,7 +147,7 @@ if __name__ == '__main__':
     CNT_VALID_DATA_ALL_PTN      = CNT_VALID_DATA_EACH_PTN * CNT_PATTERN      # number of all validation data
     CNT_TEST_DATA_ALL_PTN       = CNT_TEST_DATA_EACH_PTN * CNT_PATTERN       # number of all test data
 
-    DIM_INPUT_SIGNAL_ALL_PTN    = CNT_INPUT_EACH_PTN * CNT_PATTERN           # dimension of all input signal
+    DIM_INPUT_SIGNAL_ALL_PTN    = DIM_INPUT_EACH_PTN * CNT_PATTERN           # dimension of all input signal
     DIM_OUTPUT_SIGNAL_ALL_PTN   = CNT_PATTERN                                # dimension of all output signal
     DIMS_HIDDEN_LAYERS          = [20, 20]
     CD_K_ITERATION              = 1                                          # CD-k in RBM
@@ -203,8 +203,8 @@ if __name__ == '__main__':
             for input_idx in range(DIM_INPUT_SIGNAL_ALL_PTN): # visible_idx < 4
                 is_pattern_idx_in_curr_part = train_data_idx >= CNT_TRAIN_DATA_EACH_PTN * pattern_idx and \
                                               train_data_idx < CNT_TRAIN_DATA_EACH_PTN * (pattern_idx + 1)
-                is_visible_idx_in_curr_part = input_idx >= CNT_INPUT_EACH_PTN * pattern_idx and \
-                                              input_idx < CNT_INPUT_EACH_PTN * (pattern_idx + 1)
+                is_visible_idx_in_curr_part = input_idx >= DIM_INPUT_EACH_PTN * pattern_idx and \
+                                              input_idx < DIM_INPUT_EACH_PTN * (pattern_idx + 1)
                 if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
                     train_input_data_set[train_data_idx][input_idx] = binomial_train_true.compute(rand_obj)
                 else:
@@ -217,8 +217,8 @@ if __name__ == '__main__':
             for input_idx in range(DIM_INPUT_SIGNAL_ALL_PTN): # visible_idx < 4
                 is_pattern_idx_in_curr_part = train_data_idx >= CNT_VALID_DATA_EACH_PTN * pattern_idx and \
                                               train_data_idx < CNT_VALID_DATA_EACH_PTN * (pattern_idx + 1)
-                is_visible_idx_in_curr_part = input_idx >= CNT_INPUT_EACH_PTN * pattern_idx and \
-                                              input_idx < CNT_INPUT_EACH_PTN * (pattern_idx + 1)
+                is_visible_idx_in_curr_part = input_idx >= DIM_INPUT_EACH_PTN * pattern_idx and \
+                                              input_idx < DIM_INPUT_EACH_PTN * (pattern_idx + 1)
                 if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
                     valid_input_data_set[valid_data_idx][input_idx] = binomial_train_true.compute(rand_obj)
                 else:
@@ -237,8 +237,8 @@ if __name__ == '__main__':
             for input_idx in range(DIM_INPUT_SIGNAL_ALL_PTN): # visible_idx < 4
                 is_pattern_idx_in_curr_part = test_data_idx >= CNT_TEST_DATA_EACH_PTN * pattern_idx and \
                                               test_data_idx < CNT_TEST_DATA_EACH_PTN * (pattern_idx + 1)
-                is_visible_idx_in_curr_part = input_idx >= CNT_INPUT_EACH_PTN * pattern_idx and \
-                                              input_idx < CNT_INPUT_EACH_PTN * (pattern_idx + 1)
+                is_visible_idx_in_curr_part = input_idx >= DIM_INPUT_EACH_PTN * pattern_idx and \
+                                              input_idx < DIM_INPUT_EACH_PTN * (pattern_idx + 1)
                 if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
                     test_input_data_set[test_data_idx][input_idx] = binomial_test_true.compute(rand_obj)
                 else:

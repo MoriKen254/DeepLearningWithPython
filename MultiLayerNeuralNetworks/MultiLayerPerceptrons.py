@@ -65,12 +65,12 @@ class MutliLayerPerceptrons:
 
 
 if __name__ == '__main__':
-    CNT_PATTERN = 2
-    CNT_TRAIN_DATA = 4 # number of training data
-    CNT_TEST_DATA = 4 # number of test data
-    DIM_INPUT_SIGNAL = 2 # dimensions of input data
-    DIM_HIDDEN = 3 # dimensions of hidden
-    DIM_OUTPUT_SIGNAL = CNT_PATTERN # dimensions of output data
+    CNT_PATTERN         = 2
+    CNT_TRAIN_DATA      = 4               # number of training data
+    CNT_TEST_DATA       = 4               # number of test data
+    DIM_INPUT_SIGNAL    = 2               # dimensions of input data
+    DIM_HIDDEN          = 3               # dimensions of hidden
+    DIM_OUTPUT_SIGNAL   = CNT_PATTERN     # dimensions of output data
 
     # input data for training
     train_input_data_set = [[0] * DIM_INPUT_SIGNAL for j in range(CNT_TRAIN_DATA)]

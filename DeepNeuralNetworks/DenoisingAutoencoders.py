@@ -172,40 +172,40 @@ class DenoisingAutoencoders:
 
 if __name__ == '__main__':
 
-    CNT_TRAIN_DATA_EACH = 200           # for demo
-    CNT_TEST_DATA_EACH  = 2             # for demo
-    CNT_VISIBLE_EACH    = 4             # for demo
-    PROB_NOISE_TRAIN    = 0.05          # for demo
-    PROB_NOISE_TEST     = 0.25          # for demo
+    CNT_TRAIN_DATA_EACH_PTN     = 200           # for demo
+    CNT_TEST_DATA_EACH_PTN      = 2             # for demo
+    CNT_VISIBLE_EACH_PTN        = 4             # for demo
+    PROB_NOISE_TRAIN            = 0.05          # for demo
+    PROB_NOISE_TEST             = 0.25          # for demo
 
-    CNT_PATTERN         = 3
+    CNT_PATTERN                 = 3
 
-    CNT_TRAIN_DATA      = CNT_TRAIN_DATA_EACH * CNT_PATTERN # number of training data
-    CNT_TEST_DATA       = CNT_TEST_DATA_EACH * CNT_PATTERN  # number of test data
+    CNT_TRAIN_DATA_ALL_PTN      = CNT_TRAIN_DATA_EACH_PTN * CNT_PATTERN # number of training data
+    CNT_TEST_DATA_ALL_PTN       = CNT_TEST_DATA_EACH_PTN * CNT_PATTERN  # number of test data
 
-    DIM_VISIBLE         = CNT_VISIBLE_EACH * CNT_PATTERN    # number of test data
-    DIM_HIDDEN          = 6             # dimensions of hidden
-    CORRUPTION_LEVEL    = 0.2
+    DIM_VISIBLE                 = CNT_VISIBLE_EACH_PTN * CNT_PATTERN    # number of test data
+    DIM_HIDDEN                  = 6                                     # dimensions of hidden
+    CORRUPTION_LEVEL            = 0.2
 
     # input data for training
-    train_input_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TRAIN_DATA)]
+    train_input_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TRAIN_DATA_ALL_PTN)]
     # input data for test
-    test_input_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TEST_DATA)]
+    test_input_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TEST_DATA_ALL_PTN)]
     # output data predicted by the model
-    test_restricted_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TEST_DATA)]
-    reconstructed_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TEST_DATA)]
+    test_restricted_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TEST_DATA_ALL_PTN)]
+    reconstructed_data_set = [[0] * DIM_VISIBLE for j in range(CNT_TEST_DATA_ALL_PTN)]
 
     EPOCHS = 1000           # maximum training epochs
     learning_rate = 0.2     # learning rate
 
     MIN_BATCH_SIZE = 10     # here, we do on-line training
-    CNT_MIN_BATCH = CNT_TRAIN_DATA / MIN_BATCH_SIZE
+    CNT_MIN_BATCH = CNT_TRAIN_DATA_ALL_PTN / MIN_BATCH_SIZE
 
     train_input_data_set_min_batch = [[[0] * DIM_VISIBLE for j in range(MIN_BATCH_SIZE)]
                                       for k in range(CNT_MIN_BATCH)]
     train_teacher_data_set_min_batch = [[[0] * DIM_VISIBLE for j in range(MIN_BATCH_SIZE)]
                                         for k in range(CNT_MIN_BATCH)]
-    min_batch_indexes = range(CNT_TRAIN_DATA)
+    min_batch_indexes = range(CNT_TRAIN_DATA_ALL_PTN)
     random.shuffle(min_batch_indexes)   # shuffle data index for SGD
 
     #
@@ -232,28 +232,28 @@ if __name__ == '__main__':
 
     for pattern_idx in range(CNT_PATTERN):  # train for each pattern. pattern_idx < 3
         # create training data
-        for n in range(CNT_TRAIN_DATA_EACH): # train for the number of data set for each pattern. n < 200
-            train_data_idx = pattern_idx * CNT_TRAIN_DATA_EACH + n
+        for n in range(CNT_TRAIN_DATA_EACH_PTN): # train for the number of data set for each pattern. n < 200
+            train_data_idx = pattern_idx * CNT_TRAIN_DATA_EACH_PTN + n
 
             for visible_idx in range(DIM_VISIBLE): # visible_idx < 4
-                is_pattern_idx_in_curr_part = train_data_idx >= CNT_TRAIN_DATA_EACH * pattern_idx and \
-                                              train_data_idx <  CNT_TRAIN_DATA_EACH * (pattern_idx + 1)
-                is_visible_idx_in_curr_part = visible_idx    >= CNT_VISIBLE_EACH    * pattern_idx and \
-                                              visible_idx    <  CNT_VISIBLE_EACH    * (pattern_idx + 1)
+                is_pattern_idx_in_curr_part = train_data_idx >= CNT_TRAIN_DATA_EACH_PTN * pattern_idx and \
+                                              train_data_idx < CNT_TRAIN_DATA_EACH_PTN * (pattern_idx + 1)
+                is_visible_idx_in_curr_part = visible_idx >= CNT_VISIBLE_EACH_PTN * pattern_idx and \
+                                              visible_idx < CNT_VISIBLE_EACH_PTN * (pattern_idx + 1)
                 if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
                     train_input_data_set[train_data_idx][visible_idx] = binomial_train_true.compute(rand_obj)
                 else:
                     train_input_data_set[train_data_idx][visible_idx] = binomial_train_false.compute(rand_obj)
 
         # create test data
-        for n in range(CNT_TEST_DATA_EACH): # train for the number of data set for each pattern. n < 200
-            test_data_idx = pattern_idx * CNT_TEST_DATA_EACH + n
+        for n in range(CNT_TEST_DATA_EACH_PTN): # train for the number of data set for each pattern. n < 200
+            test_data_idx = pattern_idx * CNT_TEST_DATA_EACH_PTN + n
 
             for visible_idx in range(DIM_VISIBLE): # visible_idx < 4
-                is_pattern_idx_in_curr_part = test_data_idx >= CNT_TEST_DATA_EACH * pattern_idx and \
-                                              test_data_idx <  CNT_TEST_DATA_EACH * (pattern_idx + 1)
-                is_visible_idx_in_curr_part = visible_idx   >= CNT_VISIBLE_EACH   * pattern_idx and \
-                                              visible_idx   <  CNT_VISIBLE_EACH   * (pattern_idx + 1)
+                is_pattern_idx_in_curr_part = test_data_idx >= CNT_TEST_DATA_EACH_PTN * pattern_idx and \
+                                              test_data_idx < CNT_TEST_DATA_EACH_PTN * (pattern_idx + 1)
+                is_visible_idx_in_curr_part = visible_idx >= CNT_VISIBLE_EACH_PTN * pattern_idx and \
+                                              visible_idx < CNT_VISIBLE_EACH_PTN * (pattern_idx + 1)
                 if is_pattern_idx_in_curr_part and is_visible_idx_in_curr_part:
                     test_input_data_set[test_data_idx][visible_idx] = binomial_test_true.compute(rand_obj)
                 else:
@@ -296,9 +296,9 @@ if __name__ == '__main__':
     for pattern in range(CNT_PATTERN):
         print '\n'
         print 'Class%d' % (pattern + 1)
-        for n in range(CNT_TEST_DATA_EACH):
+        for n in range(CNT_TEST_DATA_EACH_PTN):
             print_str = ''
-            idx = pattern * CNT_TEST_DATA_EACH + n
+            idx = pattern * CNT_TEST_DATA_EACH_PTN + n
 
             print_str +=  '['
             for i in range(DIM_VISIBLE - 1):
