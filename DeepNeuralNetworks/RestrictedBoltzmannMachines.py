@@ -294,9 +294,8 @@ if __name__ == '__main__':
 
         learning_rate *= 0.995
 
-        print('epoch = %.lf' % epoch)
-        # if epoch % 10 == 0:
-        #    print 'epoch = %.lf' % epoch
+        if (epoch + 1) % 10 == 0:
+            print('epoch ' + str(epoch + 1) +  ' out of ' + str(EPOCHS))
 
     # test
     for i, test_input_data in enumerate(test_input_data_set):

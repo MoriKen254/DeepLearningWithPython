@@ -59,9 +59,11 @@ class StackedDenoisingAutoencoders:
     def pretrain(self, input_signals_arr, min_batch_size, cnt_min_batch, epochs, learning_rate, cd_k_iter):
         input_signals_tmp = [[0] * self.dim_input_signal for j in range(min_batch_size)]
         for layer in range(self.cnt_layers):
-            print('layer ' + str(layer))
+            print('layer ' + str(layer + 1) + ' out of ' + str(self.cnt_layers))
             for epoch in range(epochs):
-                print(' epoch ' + str(epoch))
+                if (epoch + 1) % 5 == 0:
+                    print(' epoch ' + str(epoch + 1) + ' out of ' + str(epochs))
+
                 for input_signals in input_signals_arr:
                     # Set input data for current layer
                     if layer == 0:
@@ -82,7 +84,7 @@ class StackedDenoisingAutoencoders:
         hiddens_arr = []
 
         for layer, dim_hidden_layer in enumerate(self.dims_hidden_layers):
-            print('layer foward' + str(layer))
+            # print('layer foward' + str(layer))
             inputs_layer = []
             hiddens_arr_tmp = [[0] * dim_hidden_layer for j in range(cnt_min_batch)]
 
@@ -104,7 +106,7 @@ class StackedDenoisingAutoencoders:
         # backward hidden layers
         grad_hidden = [[0] for j in range(1)]
         for layer in reversed(range(self.cnt_layers)):
-            print('layer backward' + str(layer))
+            # print('layer backward' + str(layer))
             if layer == self.cnt_layers - 1:
                 weights_prev = self.logistic_layer.weights
             else:
@@ -273,7 +275,6 @@ if __name__ == '__main__':
     print('Pre-training the model...')
     classifier.pretrain(train_input_data_set_min_batch, MIN_BATCH_SIZE, CNT_MIN_BATCH_TRAIN, PRETRAIN_EPOCHS,
                         PRETRAIN_LEARNING_RATE, CORRUPTION_LEVEL)
-    # classifier.
     print('done.')
 
     # fine-tuning the model
@@ -284,7 +285,9 @@ if __name__ == '__main__':
             classifier.finetune(valid_input_data_set_min_batch[batch], valid_teacher_data_set_min_batch[batch],
                                 MIN_BATCH_SIZE, finetune_learning_rate)
         finetune_learning_rate *= 0.98
-    # classifier.
+
+        if (epoch + 1) % 5 == 0:
+            print(' epoch ' + str(epoch + 1) + ' out of ' + str(FINETUNE_EPOCHS))
     print('done.')
 
     # test

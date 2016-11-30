@@ -132,8 +132,8 @@ if __name__ == '__main__':
                 zip(train_input_data_set_min_batch, train_teacher_data_set_min_batch):
             classifier.train(train_input_data_min_batch, train_teacher_data_min_batch, MIN_BATCH_SIZE, learning_rate)
 
-        if epoch % 10 == 0:
-            print('epoch = %.lf' % epoch)
+        if (epoch + 1) % 500 == 0:
+            print('epoch ' + str(epoch + 1) +  ' out of ' + str(EPOCHS))
 
     # test
     for i, test_input_data in enumerate(test_input_data_set):
