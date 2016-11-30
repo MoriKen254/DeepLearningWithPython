@@ -8,9 +8,13 @@ See LICENSE file included in this repository.
 """
 
 import random
+import sys
+
+sys.path.append('../')
 
 from util.ActivationFunction import Sigmoid
 from util.RandomGenerator import Uniform, Binomial
+
 
 class DenoisingAutoencoders:
     u"""
@@ -60,8 +64,7 @@ class DenoisingAutoencoders:
         gradients_visible_b = [0] * self.dim_visible
 
         # forward hidden layer
-        for n, input_signal in enumerate(input_signals):
-
+        for input_signal in input_signals:
             # add noise to original inputs
             corrupted_input_signals = self.getCorruptedInput(input_signal, corruption_level)
 
@@ -191,13 +194,13 @@ if __name__ == '__main__':
     learning_rate = 0.2     # learning rate
 
     MIN_BATCH_SIZE = 10     # here, we do on-line training
-    CNT_MIN_BATCH = CNT_TRAIN_DATA_ALL_PTN / MIN_BATCH_SIZE
+    CNT_MIN_BATCH = int(CNT_TRAIN_DATA_ALL_PTN / MIN_BATCH_SIZE)
 
     train_input_data_set_min_batch = [[[0] * DIM_VISIBLE for j in range(MIN_BATCH_SIZE)]
                                       for k in range(CNT_MIN_BATCH)]
     train_teacher_data_set_min_batch = [[[0] * DIM_VISIBLE for j in range(MIN_BATCH_SIZE)]
                                         for k in range(CNT_MIN_BATCH)]
-    min_batch_indexes = range(CNT_TRAIN_DATA_ALL_PTN)
+    min_batch_indexes = list(range(CNT_TRAIN_DATA_ALL_PTN))
     random.shuffle(min_batch_indexes)   # shuffle data index for SGD
 
     #
@@ -272,32 +275,32 @@ if __name__ == '__main__':
 
         learning_rate *= 0.995
 
-        print 'epoch = %.lf' % epoch
-        #if epoch%10 == 0:
-        #    print 'epoch = %.lf' % epoch
+        print('epoch = %.lf' % epoch)
+        # if epoch%10 == 0:
+        #    print('epoch = %.lf' % epoch)
 
     # test
     for i, test_input_data in enumerate(test_input_data_set):
         reconstructed_data_set[i] = dae.reconstruct(test_input_data)
 
-    # evvaluation
-    print '-----------------------------------'
-    print 'DA model reconstruction evaluation'
-    print '-----------------------------------'
+    # evaluation
+    print('----------------------------------')
+    print('DA model reconstruction evaluation')
+    print('----------------------------------')
 
     for pattern in range(CNT_PATTERN):
-        print '\n'
-        print 'Class%d' % (pattern + 1)
+        print('\n')
+        print('Class%d' % (pattern + 1))
         for n in range(CNT_TEST_DATA_EACH_PTN):
             print_str = ''
             idx = pattern * CNT_TEST_DATA_EACH_PTN + n
 
             print_str +=  '['
             for i in range(DIM_VISIBLE - 1):
-                print_str +=  '%d, ' % test_input_data_set[idx][i]
-            print_str +=  '%d] -> [' % test_input_data_set[idx][i]
+                print_str += '%d, ' % test_input_data_set[idx][i]
+            print_str += '%d] -> [' % test_input_data_set[idx][i]
 
             for i in range(DIM_VISIBLE - 1):
                 print_str += '%.5f, ' % reconstructed_data_set[idx][i]
             print_str += '%.5f]' % reconstructed_data_set[idx][i]
-            print print_str
+            print(print_str)

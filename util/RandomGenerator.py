@@ -7,7 +7,6 @@ This software is released under the MIT License.
 See LICENSE file included in this repository.
 """
 
-import random
 import abc
 
 class RandomGenerator(object):

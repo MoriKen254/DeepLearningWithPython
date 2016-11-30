@@ -8,9 +8,13 @@ See LICENSE file included in this repository.
 """
 
 import random
+import sys
+
+sys.path.append('..')
 
 from SingleLayerNeuralNetworks.LogisticRegression import LogisticRegression
 from MultiLayerNeuralNetworks.HiddenLayer import HiddenLayer
+
 
 class MutliLayerPerceptrons:
     u"""
@@ -82,16 +86,16 @@ if __name__ == '__main__':
     test_predict_output_labels = [0] * CNT_TEST_DATA
 
     EPOCHS = 5000   # maximum training epochs
-    learning_rate = 0.1 # learning rate
+    learning_rate = 0.1  # learning rate
 
-    MIN_BATCH_SIZE = 1 # here, we do on-line training
-    CNT_MIN_BATCH = CNT_TRAIN_DATA / MIN_BATCH_SIZE
+    MIN_BATCH_SIZE = 1  # here, we do on-line training
+    CNT_MIN_BATCH = int(CNT_TRAIN_DATA / MIN_BATCH_SIZE)
 
     train_input_data_set_min_batch = [[[0] * DIM_INPUT_SIGNAL for j in range(MIN_BATCH_SIZE)]
                                       for k in range(CNT_MIN_BATCH)]
     train_teacher_data_set_min_batch = [[[0] * DIM_OUTPUT_SIGNAL for j in range(MIN_BATCH_SIZE)]
                                         for k in range(CNT_MIN_BATCH)]
-    min_batch_indexes = range(CNT_TRAIN_DATA)
+    min_batch_indexes = list(range(CNT_TRAIN_DATA))
     random.shuffle(min_batch_indexes)   # shuffle data index for SGD
 
     #
@@ -128,8 +132,8 @@ if __name__ == '__main__':
                 zip(train_input_data_set_min_batch, train_teacher_data_set_min_batch):
             classifier.train(train_input_data_min_batch, train_teacher_data_min_batch, MIN_BATCH_SIZE, learning_rate)
 
-        if epoch%10 == 0:
-            print 'epoch = %.lf' % epoch
+        if epoch % 10 == 0:
+            print('epoch = %.lf' % epoch)
 
     # test
     for i, test_input_data in enumerate(test_input_data_set):
@@ -167,13 +171,13 @@ if __name__ == '__main__':
 
     accuracy /= CNT_TEST_DATA
 
-    print '--------------------'
-    print 'MLP model evaluation'
-    print '--------------------'
-    print 'Accuracy:  %.1f %%' % (accuracy * 100)
-    print 'Precision:'
+    print('--------------------')
+    print('MLP model evaluation')
+    print('--------------------')
+    print('Accuracy:  %.1f %%' % (accuracy * 100))
+    print('Precision:')
     for i, precision_elem in enumerate(precision):
-        print 'class %d: %.1f %%' % (i+1, precision_elem * 100)
-    print 'Recall:'
+        print('class %d: %.1f %%' % (i+1, precision_elem * 100))
+    print('Recall:')
     for i, recall_elem in enumerate(recall):
-        print 'class %d: %.1f %%' % (i+1, recall_elem * 100)
+        print('class %d: %.1f %%' % (i+1, recall_elem * 100))

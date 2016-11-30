@@ -10,6 +10,7 @@ See LICENSE file included in this repository.
 import abc
 import math
 
+
 class ActivationFunction(object):
 
     def __init__(self, activation_name):
