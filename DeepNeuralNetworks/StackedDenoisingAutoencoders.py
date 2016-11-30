@@ -9,11 +9,14 @@ See LICENSE file included in this repository.
 
 import random
 import copy
+import sys
 
+sys.path.append('..')
+
+from DeepNeuralNetworks.DenoisingAutoencoders import DenoisingAutoencoders
 from SingleLayerNeuralNetworks.LogisticRegression import LogisticRegression
 from MultiLayerNeuralNetworks.HiddenLayer import HiddenLayer
 from util.RandomGenerator import Binomial
-from DeepNeuralNetworks.DenoisingAutoencoders import DenoisingAutoencoders
 
 class StackedDenoisingAutoencoders:
 
@@ -56,9 +59,9 @@ class StackedDenoisingAutoencoders:
     def pretrain(self, input_signals_arr, min_batch_size, cnt_min_batch, epochs, learning_rate, cd_k_iter):
         input_signals_tmp = [[0] * self.dim_input_signal for j in range(min_batch_size)]
         for layer in range(self.cnt_layers):
-            print 'layer ' + str(layer)
+            print('layer ' + str(layer))
             for epoch in range(epochs):
-                print ' epoch ' + str(epoch)
+                print(' epoch ' + str(epoch))
                 for input_signals in input_signals_arr:
                     # Set input data for current layer
                     if layer == 0:
@@ -79,12 +82,12 @@ class StackedDenoisingAutoencoders:
         hiddens_arr = []
 
         for layer, dim_hidden_layer in enumerate(self.dims_hidden_layers):
-            print 'layer foward' + str(layer)
+            print('layer foward' + str(layer))
             inputs_layer = []
             hiddens_arr_tmp = [[0] * dim_hidden_layer for j in range(cnt_min_batch)]
 
             for n, input_signals in enumerate(input_signals_arr):
-                print ' input signal ' + str(n)
+                # print(' input signal ' + str(n))
                 if layer == 0:
                     inputs_layer = input_signals
                 else:
@@ -101,7 +104,7 @@ class StackedDenoisingAutoencoders:
         # backward hidden layers
         grad_hidden = [[0] for j in range(1)]
         for layer in reversed(range(self.cnt_layers)):
-            print 'layer backword' + str(layer)
+            print('layer backward' + str(layer))
             if layer == self.cnt_layers - 1:
                 weights_prev = self.logistic_layer.weights
             else:
@@ -166,8 +169,8 @@ if __name__ == '__main__':
     finetune_learning_rate = 0.15   # learning rate for  fine-tune
 
     MIN_BATCH_SIZE = 50
-    CNT_MIN_BATCH_TRAIN = CNT_TRAIN_DATA_ALL_PTN / MIN_BATCH_SIZE
-    CNT_MIN_BATCH_VALID = CNT_VALID_DATA_ALL_PTN / MIN_BATCH_SIZE
+    CNT_MIN_BATCH_TRAIN = int(CNT_TRAIN_DATA_ALL_PTN / MIN_BATCH_SIZE)
+    CNT_MIN_BATCH_VALID = int(CNT_VALID_DATA_ALL_PTN / MIN_BATCH_SIZE)
 
     train_input_data_set_min_batch = [[[0] * DIM_INPUT_SIGNAL_ALL_PTN for j in range(MIN_BATCH_SIZE)]
                                       for k in range(CNT_MIN_BATCH_TRAIN)]
@@ -175,7 +178,7 @@ if __name__ == '__main__':
                                         for k in range(CNT_MIN_BATCH_VALID)]
     valid_teacher_data_set_min_batch = [[[0] * DIM_INPUT_SIGNAL_ALL_PTN for j in range(MIN_BATCH_SIZE)]
                                         for k in range(CNT_MIN_BATCH_VALID)]
-    min_batch_indexes = range(CNT_TRAIN_DATA_ALL_PTN)
+    min_batch_indexes = list(range(CNT_TRAIN_DATA_ALL_PTN))
     random.shuffle(min_batch_indexes)   # shuffle data index for SGD
 
     #
@@ -262,19 +265,19 @@ if __name__ == '__main__':
     #
 
     # construct SDA
-    print 'Building the model...'
+    print('Building the model...')
     classifier = StackedDenoisingAutoencoders(DIM_INPUT_SIGNAL_ALL_PTN, DIMS_HIDDEN_LAYERS, DIM_OUTPUT_SIGNAL_ALL_PTN, rand_obj)
-    print 'done.'
+    print('done.')
 
     # pre-training the model
-    print 'Pre-training the model...'
+    print('Pre-training the model...')
     classifier.pretrain(train_input_data_set_min_batch, MIN_BATCH_SIZE, CNT_MIN_BATCH_TRAIN, PRETRAIN_EPOCHS,
                         PRETRAIN_LEARNING_RATE, CORRUPTION_LEVEL)
     # classifier.
-    print 'done.'
+    print('done.')
 
     # fine-tuning the model
-    print 'Fine-Tuning the model...'
+    print('Fine-Tuning the model...')
     for epoch in range(FINETUNE_EPOCHS):
 #        for valid_input_data_min_batch in enumerate(valid_input_data_set_min_batch):
         for batch in range(CNT_MIN_BATCH_VALID):
@@ -282,7 +285,7 @@ if __name__ == '__main__':
                                 MIN_BATCH_SIZE, finetune_learning_rate)
         finetune_learning_rate *= 0.98
     # classifier.
-    print 'done.'
+    print('done.')
 
     # test
     for i, test_input_data in enumerate(test_input_data_set):
@@ -320,14 +323,14 @@ if __name__ == '__main__':
 
     accuracy /= CNT_TEST_DATA_ALL_PTN
 
-    print '-------------------------------'
-    print 'SDA Regression model evaluation'
-    print '-------------------------------'
-    print 'Accuracy:  %.1f %%' % (accuracy * 100)
-    print 'Precision:'
+    print('-------------------------------')
+    print('SDA Regression model evaluation')
+    print('-------------------------------')
+    print('Accuracy:  %.1f %%' % (accuracy * 100))
+    print('Precision:')
     for i, precision_elem in enumerate(precision):
-        print 'class %d: %.1f %%' % (i+1, precision_elem * 100)
-    print 'Recall:'
+        print('class %d: %.1f %%' % (i+1, precision_elem * 100))
+    print('Recall:')
     for i, recall_elem in enumerate(recall):
-        print 'class %d: %.1f %%' % (i+1, recall_elem * 100)
+        print('class %d: %.1f %%' % (i+1, recall_elem * 100))
 

@@ -10,6 +10,7 @@ See LICENSE file included in this repository.
 import random
 import math
 
+
 class GaussianDistribution:
 
     def __init__(self, mean, var, rand_obj):

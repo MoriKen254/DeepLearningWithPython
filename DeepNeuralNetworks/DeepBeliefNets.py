@@ -9,11 +9,15 @@ See LICENSE file included in this repository.
 
 import random
 import copy
+import sys
+
+sys.path.append('..')
 
 from DeepNeuralNetworks.RestrictedBoltzmannMachines import RestrictedBoltzmannMachines
 from SingleLayerNeuralNetworks.LogisticRegression import LogisticRegression
 from MultiLayerNeuralNetworks.HiddenLayer import HiddenLayer
 from util.RandomGenerator import Binomial
+
 
 class DeepBeliefNets:
 
@@ -26,7 +30,7 @@ class DeepBeliefNets:
         self.dims_hidden_layers = dims_hidden_layers
         self.dim_output_signal = dim_output_layer
         self.cnt_layers = len(dims_hidden_layers)
-        self.sigmoid_layers = []#HiddenLayer(self.cnt_layers)
+        self.sigmoid_layers = []
         self.rbm_layers = []
 
         # construct multi-layer
@@ -55,9 +59,9 @@ class DeepBeliefNets:
     def pretrain(self, input_signals_arr, min_batch_size, cnt_min_batch, epochs, learning_rate, cd_k_iter):
         input_signals_tmp = [[0] * self.dim_input_signal for j in range(min_batch_size)]
         for layer in range(self.cnt_layers):
-            print 'layer ' + str(layer)
+            print('layer ' + str(layer))
             for epoch in range(epochs):
-                print ' epoch ' + str(epoch)
+                print(' epoch ' + str(epoch))
                 for input_signals in input_signals_arr:
                     # Set input data for current layer
                     if layer == 0:
@@ -78,12 +82,12 @@ class DeepBeliefNets:
         hiddens_arr = []
 
         for layer, dim_hidden_layer in enumerate(self.dims_hidden_layers):
-            print 'layer foward' + str(layer)
+            print('layer foward' + str(layer))
             inputs_layer = []
             hiddens_arr_tmp = [[0] * dim_hidden_layer for j in range(cnt_min_batch)]
 
             for n, input_signals in enumerate(input_signals_arr):
-                print ' input signal ' + str(n)
+                # print(' input signal ' + str(n))
                 if layer == 0:
                     inputs_layer = input_signals
                 else:
@@ -100,7 +104,7 @@ class DeepBeliefNets:
         # backward hidden layers
         grad_hidden = [[0] for j in range(1)]
         for layer in reversed(range(self.cnt_layers)):
-            print 'layer backword' + str(layer)
+            print('layer backword' + str(layer))
             if layer == self.cnt_layers - 1:
                 weights_prev = self.logistic_layer.weights
             else:
@@ -114,7 +118,7 @@ class DeepBeliefNets:
     def predict(self, input_signals):
         hiddens = []
 
-        for layer, sigmoid_layeer in enumerate(self.sigmoid_layers):
+        for layer, sigmoid_layer in enumerate(self.sigmoid_layers):
             layer_inputs = []
 
             if layer == 0:
@@ -122,7 +126,7 @@ class DeepBeliefNets:
             else:
                 layer_inputs = copy.deepcopy(hiddens)
 
-            hiddens = sigmoid_layeer.forward(layer_inputs)
+            hiddens = sigmoid_layer.forward(layer_inputs)
 
         return self.logistic_layer.predict(hiddens)
 
@@ -165,16 +169,16 @@ if __name__ == '__main__':
     finetune_learning_rate = 0.15   # learning rate for  fine-tune
 
     MIN_BATCH_SIZE = 50
-    CNT_MIN_BATCH_TRAIN = CNT_TRAIN_DATA_ALL_PTN / MIN_BATCH_SIZE
-    CNT_MIN_BATCH_VALID = CNT_VALID_DATA_ALL_PTN / MIN_BATCH_SIZE
+    CNT_MIN_BATCH_TRAIN = int(CNT_TRAIN_DATA_ALL_PTN / MIN_BATCH_SIZE)
+    CNT_MIN_BATCH_VALID = int(CNT_VALID_DATA_ALL_PTN / MIN_BATCH_SIZE)
 
     train_input_data_set_min_batch = [[[0] * DIM_INPUT_SIGNAL_ALL_PTN for j in range(MIN_BATCH_SIZE)]
                                       for k in range(CNT_MIN_BATCH_TRAIN)]
     valid_input_data_set_min_batch = [[[0] * DIM_INPUT_SIGNAL_ALL_PTN for j in range(MIN_BATCH_SIZE)]
-                                        for k in range(CNT_MIN_BATCH_VALID)]
+                                      for k in range(CNT_MIN_BATCH_VALID)]
     valid_teacher_data_set_min_batch = [[[0] * DIM_INPUT_SIGNAL_ALL_PTN for j in range(MIN_BATCH_SIZE)]
                                         for k in range(CNT_MIN_BATCH_VALID)]
-    min_batch_indexes = range(CNT_TRAIN_DATA_ALL_PTN)
+    min_batch_indexes = list(range(CNT_TRAIN_DATA_ALL_PTN))
     random.shuffle(min_batch_indexes)   # shuffle data index for SGD
 
     #
@@ -260,27 +264,24 @@ if __name__ == '__main__':
     #
 
     # construct DBN
-    print 'Building the model...'
+    print('Building the model...')
     classifier = DeepBeliefNets(DIM_INPUT_SIGNAL_ALL_PTN, DIMS_HIDDEN_LAYERS, DIM_OUTPUT_SIGNAL_ALL_PTN, rand_obj)
-    print 'done.'
+    print('done.')
 
     # pre-training the model
-    print 'Pre-training the model...'
+    print('Pre-training the model...')
     classifier.pretrain(train_input_data_set_min_batch, MIN_BATCH_SIZE, CNT_MIN_BATCH_TRAIN, PRETRAIN_EPOCHS,
                         PRETRAIN_LEARNING_RATE, CD_K_ITERATION)
-    # classifier.
-    print 'done.'
+    print('done.')
 
     # fine-tuning the model
-    print 'Fine-Tuning the model...'
+    print('Fine-Tuning the model...')
     for epoch in range(FINETUNE_EPOCHS):
-#        for valid_input_data_min_batch in enumerate(valid_input_data_set_min_batch):
         for batch in range(CNT_MIN_BATCH_VALID):
             classifier.finetune(valid_input_data_set_min_batch[batch], valid_teacher_data_set_min_batch[batch],
                                 MIN_BATCH_SIZE, finetune_learning_rate)
         finetune_learning_rate *= 0.98
-    # classifier.
-    print 'done.'
+    print('done.')
 
     # test
     for i, test_input_data in enumerate(test_input_data_set):
@@ -318,14 +319,14 @@ if __name__ == '__main__':
 
     accuracy /= CNT_TEST_DATA_ALL_PTN
 
-    print '-------------------------------'
-    print 'DBN Regression model evaluation'
-    print '-------------------------------'
-    print 'Accuracy:  %.1f %%' % (accuracy * 100)
-    print 'Precision:'
+    print('-------------------------------')
+    print('DBN Regression model evaluation')
+    print('-------------------------------')
+    print('Accuracy:  %.1f %%' % (accuracy * 100))
+    print('Precision:')
     for i, precision_elem in enumerate(precision):
-        print 'class %d: %.1f %%' % (i+1, precision_elem * 100)
-    print 'Recall:'
+        print('class %d: %.1f %%' % (i+1, precision_elem * 100))
+    print('Recall:')
     for i, recall_elem in enumerate(recall):
-        print 'class %d: %.1f %%' % (i+1, recall_elem * 100)
+        print('class %d: %.1f %%' % (i+1, recall_elem * 100))
 

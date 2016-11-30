@@ -8,9 +8,13 @@ See LICENSE file included in this repository.
 """
 
 import random
+import sys
+
+sys.path.append('../')
 
 from util.ActivationFunction import Softmax
 from util.GaussianDistribution import GaussianDistribution
+
 
 class LogisticRegression:
     u"""
@@ -25,7 +29,6 @@ class LogisticRegression:
         self.weights = [[0] * dim_input_signal for i in range(dim_output_signal)]
         self.biases = [0] * dim_output_signal
 
-
     def train(self, input_signals, teacher_labels, min_batch_size, learning_rate):
 
         gradients_w = [[0] * self.dim_input_signal for i in range(self.dim_output_signal)]
@@ -35,16 +38,16 @@ class LogisticRegression:
 
         # train with SGD
         # 1. calculate gradient of gradients_w, gradients_b
-        ## loop for minibash size
+        # loop for minibash size
         for n, (input_signal, teacher_label) in enumerate(zip(input_signals, teacher_labels)):
             predicted_y_arr = self.output(input_signal)
 
-            ## loop for output size
+            # loop for output size
             for j, (predicted_y, teacher_elem) in enumerate(zip(predicted_y_arr, teacher_label)):
                 # t_n - y_n : error between output and teacher
                 y_err_arr[n][j] = predicted_y - teacher_elem
 
-                ## loop for input size
+                # loop for input size
                 for i, input_elem in enumerate(input_signal):
                     # dE/dw = - Sum{ (t_n - y_n) * x_n } ... (2.5.14)
                     gradients_w[j][i] += y_err_arr[n][j] * input_elem
@@ -63,7 +66,6 @@ class LogisticRegression:
 
         return y_err_arr
 
-
     # compute output layer with softmax
     def output(self, input_signals):
         pre_activations = [0] * self.dim_output_signal
@@ -77,7 +79,6 @@ class LogisticRegression:
 
         # y_k = exp(a_k) / Sum{ exp(a_k) } = exp(w_k^T * x + b_k) / Sum{ exp(w_k^T * x + b_k) } ... (2.5.18)
         return Softmax.compute(pre_activations, self.dim_output_signal)
-
 
     def predict(self, input_signals):
         # a = Sum{ w^T * x + b } where a if from sigma(a) = sigma(w^T * x + b) ... (2.5.9)
@@ -123,16 +124,16 @@ if __name__ == '__main__':
     test_predict_output_labels = [0] * CNT_TEST_DATA
 
     EPOCHS = 100   # maximum training epochs
-    learning_rate = 0.2 # learning rate
+    learning_rate = 0.2  # learning rate
 
-    MIN_BATCH_SIZE = 50 # number of data in each minbatch
-    CNT_MIN_BATCH = CNT_TRAIN_DATA / MIN_BATCH_SIZE
+    MIN_BATCH_SIZE = 50  # number of data in each minbatch
+    CNT_MIN_BATCH = int(CNT_TRAIN_DATA / MIN_BATCH_SIZE)
 
     train_input_data_set_min_batch = [[[0] * DIM_INPUT_SIGNAL for j in range(MIN_BATCH_SIZE)]
                                       for k in range(CNT_MIN_BATCH)]
     train_teacher_data_set_min_batch = [[[0] * DIM_OUTPUT_SIGNAL for j in range(MIN_BATCH_SIZE)]
-                                      for k in range(CNT_MIN_BATCH)]
-    min_batch_indexes = range(CNT_TRAIN_DATA)
+                                        for k in range(CNT_MIN_BATCH)]
+    min_batch_indexes = list(range(CNT_TRAIN_DATA))
     random.shuffle(min_batch_indexes)   # shuffle data index for SGD
 
     #
@@ -152,10 +153,10 @@ if __name__ == '__main__':
 
     cls_idx_prev = 0
     cls_idx_curr = 1
-    CNT_TRAIN_DATA_PER_CLS = CNT_TRAIN_DATA/CNT_PATTERN
-    CNT_TEST_DATA_PER_CLS = CNT_TEST_DATA/CNT_PATTERN
+    CNT_TRAIN_DATA_PER_CLS = int(CNT_TRAIN_DATA/CNT_PATTERN)
+    CNT_TEST_DATA_PER_CLS = int(CNT_TEST_DATA/CNT_PATTERN)
 
-    print 'Create data set randomly.'
+    print('Create data set randomly.')
     for i in range(CNT_TRAIN_DATA_PER_CLS*cls_idx_prev, CNT_TRAIN_DATA_PER_CLS*cls_idx_curr):
         train_input_data_set[i][0] = gaussian1.get_random()
         train_input_data_set[i][1] = gaussian2.get_random()
@@ -209,8 +210,8 @@ if __name__ == '__main__':
                 zip(train_input_data_set_min_batch, train_teacher_data_set_min_batch):
             classifier.train(train_input_data_min_batch, train_teacher_data_min_batch, MIN_BATCH_SIZE, learning_rate)
 
-        if epoch%10 == 0:
-            print 'epoch = %.lf' % epoch
+        if epoch % 10 == 0:
+            print('epoch = %.lf' % epoch)
 
         learning_rate *= 0.95
 
@@ -250,14 +251,14 @@ if __name__ == '__main__':
 
     accuracy /= CNT_TEST_DATA
 
-    print '------------------------------------'
-    print 'Logistic Regression model evaluation'
-    print '------------------------------------'
-    print 'Accuracy:  %.1f %%' % (accuracy * 100)
-    print 'Precision:'
+    print('------------------------------------')
+    print('Logistic Regression model evaluation')
+    print('------------------------------------')
+    print('Accuracy:  %.1f %%' % (accuracy * 100))
+    print('Precision:')
     for i, precision_elem in enumerate(precision):
-        print 'class %d: %.1f %%' % (i+1, precision_elem * 100)
-    print 'Recall:'
+        print('class %d: %.1f %%' % (i+1, precision_elem * 100))
+    print('Recall:')
     for i, recall_elem in enumerate(recall):
-        print 'class %d: %.1f %%' % (i+1, recall_elem * 100)
+        print('class %d: %.1f %%' % (i+1, recall_elem * 100))
 
